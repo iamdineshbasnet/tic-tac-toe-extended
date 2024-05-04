@@ -1,8 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { Bot, Globe, User, Users, Zap } from 'lucide-react';
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Homepage: React.FC = () => {
+	const navigate = useNavigate()
 	return (
 		<section className="text-center mt-12">
 			<h5 className="capitalize mt-4 mb-4 font-semibold">
@@ -29,7 +31,7 @@ const Homepage: React.FC = () => {
 			</h5>
 			<ul>
 				<li className="mb-4">
-					<Button className="w-[200px] font-semibold text-md uppercase">
+					<Button className="w-[200px] font-semibold text-md uppercase" onClick={()=> navigate('/playground')}>
 						<User strokeWidth={2} size={22} className="me-2" />
 						pvp
 					</Button>
