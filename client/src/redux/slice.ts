@@ -2,39 +2,23 @@ import { createSlice } from '@reduxjs/toolkit';
 import { CommonProps } from './types';
 
 const initialState: CommonProps = {
-	turn: 'x',
-	data: ['', '', '', '', '', '', '', '', ''],
-	isDraw: false,
-	history: [],
-	disabledCell: null,
-	winningCombination: [],
+	round: 1,
+	mode: ''
 };
 
 const commonSlice = createSlice({
 	name: 'common',
 	initialState,
 	reducers: {
-		setTurn: (state, { payload }) => {
-			state.turn = payload;
+		setRound: (state, { payload })=>{
+			state.round = payload
 		},
-		setData: (state, { payload }) => {
-			state.data = payload;
-		},
-		setIsDraw: (state, { payload }) => {
-			state.isDraw = payload;
-		},
-		setHistory: (state, { payload }) => {
-			state.history = payload;
-		},
-		setDisabledCell: (state, { payload }) => {
-			state.disabledCell = payload;
-		},
-		setWinningCombination: (state, { payload }) => {
-			state.winningCombination = payload;
-		},
+		setMode: (state, { payload }) =>{
+			state.mode = payload
+		}
 	},
 });
 
-export const { setTurn, setData, setIsDraw, setHistory, setDisabledCell, setWinningCombination } =
+export const { setRound, setMode } =
 	commonSlice.actions;
 export default commonSlice.reducer;

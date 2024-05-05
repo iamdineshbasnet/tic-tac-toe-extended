@@ -5,18 +5,30 @@ import {
 	AlertDialogAction,
 	AlertDialogCancel,
 	AlertDialogContent,
+	AlertDialogDescription,
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from '../ui/alert-dialog';
 import { useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '@/utils/hooks/appHooks';
+import { commonAppSelector } from '@/redux/selector';
+import { setRound } from '@/redux/slice';
+import { PlayerProps } from '@/redux/types';
+import { Switch } from '../ui/switch';
+import useLocalStorage from 'use-local-storage';
 interface BoardProps {
 	type: 'bot' | 'player';
 	choice?: 'x' | 'o';
+	player: PlayerProps[];
+	random?: boolean;
 }
 
-const Board: React.FC<BoardProps> = ({ type = 'bot', choice = 'x' }) => {
+const Board: React.FC<BoardProps> = ({ type = 'bot', choice = 'x', player, random = false }) => {
+	const dispatch = useAppDispatch()
 	const navigate = useNavigate();
+	const [randomTurn, setRandomTurn] = useLocalStorage("game", { 'random': random });
+	console.log(randomTurn, 'random turn')
 	// state to track the turn
 	const [turn, setTurn] = useState<string>('x');
 
@@ -38,6 +50,17 @@ const Board: React.FC<BoardProps> = ({ type = 'bot', choice = 'x' }) => {
 	// state to open the dialog after certain interval
 	const [showDialog, setShowDialog] = useState(false);
 
+	// current player obj
+	const [currentPlayer, setCurrentPlayer] = useState<PlayerProps>(player[0])
+
+	const { round } = useAppSelector(commonAppSelector)
+
+	// get current player
+	useEffect(()=>{
+		const current_player = player.find((p)=> p.mark === turn)
+		current_player && setCurrentPlayer(current_player)
+	}, [turn])
+
   useEffect(() => {
     if (getWinnerMessage(checkWinner(data))) {
       const timer = setTimeout(() => {
@@ -54,8 +77,12 @@ const Board: React.FC<BoardProps> = ({ type = 'bot', choice = 'x' }) => {
 
 		if (data[index] === '' && winner === null && !isDraw) {
 			const nextTurn = turn === 'x' ? 'o' : 'x';
+			
 			const newData = [...data];
 			newData[index] = turn;
+			
+
+
 
 			const newHistory = [...history, index];
 			setHistory(newHistory);
@@ -79,7 +106,12 @@ const Board: React.FC<BoardProps> = ({ type = 'bot', choice = 'x' }) => {
 				}
 			}
 
-			setTurn(nextTurn);
+			const nextWinner = checkWinner(newData);
+
+			if (nextWinner === null) {
+				setTurn(nextTurn);
+				setCurrentPlayer(player.find((p) => p.mark === nextTurn) || player[0]);
+			}
 			checkDraw(newData);
 		}
 	};
@@ -123,27 +155,40 @@ const Board: React.FC<BoardProps> = ({ type = 'bot', choice = 'x' }) => {
 	// function to reset the board
 	const resetBoard = () => {
 		setData(['', '', '', '', '', '', '', '', '']);
-		setTurn('x');
 		setIsDraw(false);
 		setHistory([]);
 		setDisabledCell(undefined);
 		setWinningCombination([]);
 		setShowDialog(false)
 	};
+	
+	const playAgain = () =>{
+		resetBoard()
+		let nextTurn = turn == 'x' ? 'o' : 'x';
+
+		if(randomTurn){
+			nextTurn = Math.random() < 0.5 ? 'x' : 'o'
+			setTurn(nextTurn);			
+		}else{
+			setTurn(nextTurn)
+		}
+		dispatch(setRound(round + 1))
+	}
 
 	// get messages after the match complete either draw or wins
 	const getWinnerMessage = (winner: string | null) => {
 		if (winner === null && isDraw) {
 			return 'Draw';
 		} else if (winner !== null) {
-			return `${winner} Won`;
+			const win_by = player.find((p)=> p.mark === winner)
+			return `${win_by?.name} Won`;
 		}
 		return '';
 	};
 
 	// Implementing bot logic
 	useEffect(() => {
-		if (type === 'bot' && turn !== choice) {
+		if (type === 'bot' && turn === 'o') {
 			setTimeout(() => {
 				makeBotMove();
 			}, 500);
@@ -172,9 +217,22 @@ const Board: React.FC<BoardProps> = ({ type = 'bot', choice = 'x' }) => {
 		audio.play();
 	};
 
+	// leave the game
 	const leaveGame = () => {
 		navigate('/');
+		dispatch(setRound(1))
 	};
+
+	useEffect(() => {
+    setRandomTurn({ 'random': random });
+  }, [random, setRandomTurn]);
+
+
+
+	const handleSwitchChange = (value: boolean) => {
+    setRandomTurn({ 'random': value });
+  };
+
 	return (
 		<section className='flex flex-col gap-16'>
 			<section className="board_layout">
@@ -201,15 +259,18 @@ const Board: React.FC<BoardProps> = ({ type = 'bot', choice = 'x' }) => {
                   {getWinnerMessage(checkWinner(data))}
                 </AlertDialogTitle>
               </AlertDialogHeader>
+							<AlertDialogDescription>
+							<Switch onCheckedChange={handleSwitchChange} checked={randomTurn?.random || false} />
+							</AlertDialogDescription>
               <AlertDialogFooter>
                 <AlertDialogCancel onClick={leaveGame}>Leave</AlertDialogCancel>
-                <AlertDialogAction onClick={resetBoard}>Play Again</AlertDialogAction>
+                <AlertDialogAction onClick={playAgain}>Play Again</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
         )}
 			</section>
-			<p className="text-center text-lg">{turn}'s turn</p>
+			<p className="text-center text-lg">{currentPlayer.name} Turn</p>
 		</section>
 	);
 };

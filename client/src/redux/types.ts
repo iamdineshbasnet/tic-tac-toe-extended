@@ -1,10 +1,12 @@
-
+export interface PlayerProps{
+  id: number;
+  name: string;
+  mark: string;
+  image?: string;
+  win: number;
+}
 
 export interface CommonProps{
-  turn: string;
-  data: string[];
-  isDraw: boolean;
-  history: number[];
-  disabledCell: number | null;
-  winningCombination: number[]
+  round: number;
+  mode: string;
 }

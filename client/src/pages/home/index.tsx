@@ -1,10 +1,32 @@
 import { Button } from '@/components/ui/button';
+import { setMode } from '@/redux/slice';
+import { useAppDispatch } from '@/utils/hooks/appHooks';
 import { Bot, Globe, User, Users, Zap } from 'lucide-react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Homepage: React.FC = () => {
-	const navigate = useNavigate()
+	const navigate = useNavigate();
+	const dispatch = useAppDispatch();
+
+	const handleMode = (mode: string) => {
+		switch (mode) {
+			case 'friends':
+				break;
+			case 'multiplayer':
+				break;
+			case 'pvp':
+				dispatch(setMode('pvp'));
+				break;
+			case 'bot':
+				dispatch(setMode('bot'));
+				break;
+			default:
+				break;
+		}
+
+		navigate('/playground');
+	};
 	return (
 		<section className="text-center mt-12">
 			<h5 className="capitalize mt-4 mb-4 font-semibold">
@@ -31,13 +53,17 @@ const Homepage: React.FC = () => {
 			</h5>
 			<ul>
 				<li className="mb-4">
-					<Button className="w-[200px] font-semibold text-md uppercase" onClick={()=> navigate('/playground')}>
+					<Button
+						className="w-[200px] font-semibold text-md uppercase"
+						onClick={() => handleMode('pvp')}>
 						<User strokeWidth={2} size={22} className="me-2" />
 						pvp
 					</Button>
 				</li>
 				<li className="mb-4">
-					<Button className="w-[200px] font-semibold text-md">
+					<Button
+						className="w-[200px] font-semibold text-md"
+						onClick={() => handleMode('bot')}>
 						<Bot strokeWidth={2} size={22} className="me-2" />
 						Bot
 					</Button>
