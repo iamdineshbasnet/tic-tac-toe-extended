@@ -25,7 +25,7 @@ interface BoardProps {
 	random?: boolean;
 }
 
-const Board: React.FC<BoardProps> = ({ type = 'bot', choice = 'x', player, random = false }) => {
+const Board: React.FC<BoardProps> = ({ type = 'bot', player, random = false }) => {
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
 	const [randomTurn, setRandomTurn] = useLocalStorage('game', { random: random });
