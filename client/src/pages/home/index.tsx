@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
-import { setMode } from '@/redux/slice';
+import { setMode, setRound } from '@/redux/slice';
 import { useAppDispatch } from '@/utils/hooks/appHooks';
-import { Bot, Globe, User, Users, Zap } from 'lucide-react';
+import { Bot, Globe, User, Users } from 'lucide-react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -24,7 +24,7 @@ const Homepage: React.FC = () => {
 			default:
 				break;
 		}
-
+		dispatch(setRound(1))
 		navigate('/playground');
 	};
 	return (
