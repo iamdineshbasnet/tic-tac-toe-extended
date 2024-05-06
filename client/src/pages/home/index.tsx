@@ -2,13 +2,16 @@ import { Button } from '@/components/ui/button';
 import { setMode, setRound } from '@/redux/slice';
 import { useAppDispatch } from '@/utils/hooks/appHooks';
 import { Bot, Globe, User, Users } from 'lucide-react';
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CreateUser from './create';
+import Modal from '@/components/modal';
 
 const Homepage: React.FC = () => {
 	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
-
+	const [showModal, setShowModal] = useState<boolean>(false);
+	
 	const handleMode = (mode: string) => {
 		switch (mode) {
 			case 'friends':
@@ -24,8 +27,14 @@ const Homepage: React.FC = () => {
 			default:
 				break;
 		}
-		dispatch(setRound(1))
+		dispatch(setRound(1));
 		navigate('/playground');
+	};
+
+	const modalProps = {
+		title: 'Who are you?',
+		body: <CreateUser />,
+		showModal: showModal,
 	};
 	return (
 		<section className="text-center mt-12">
@@ -35,16 +44,22 @@ const Homepage: React.FC = () => {
 			</h5>
 			<ul>
 				<li className="mb-4">
-					<Button className="w-[200px] font-semibold text-md">
-						<Users strokeWidth={2} size={20} className="me-2" />
-						Friends
-					</Button>
+					<Modal {...modalProps}>
+						<Button
+							className="w-[200px] font-semibold text-md"
+							onClick={() => setShowModal(true)}>
+							<Users strokeWidth={2} size={20} className="me-2" />
+							Friends
+						</Button>
+					</Modal>
 				</li>
 				<li className="mb-4">
-					<Button className="w-[200px] font-semibold text-md">
-						<Globe strokeWidth={2} size={20} className="me-2" />
-						Multiplayer
-					</Button>
+					<Modal {...modalProps}>
+						<Button className="w-[200px] font-semibold text-md" onClick={() => setShowModal(true)}>
+							<Globe strokeWidth={2} size={20} className="me-2" />
+							Multiplayer
+						</Button>
+					</Modal>
 				</li>
 			</ul>
 			<h5 className="capitalize mt-8 mb-4 font-semibold">

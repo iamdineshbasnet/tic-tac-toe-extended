@@ -1,7 +1,7 @@
 import { ModeToggle } from '@/components/mode-toggle'
 import { Button } from '@/components/ui/button'
-import { Info } from 'lucide-react'
 import React from 'react'
+import ProfileDropdown from './dropdown/profile'
 
 const Header: React.FC = () => {
   return (
@@ -15,10 +15,8 @@ const Header: React.FC = () => {
       </div>
 
       <div className='flex items-center gap-4'>
-        <p>
-        <Info />
-        </p>
         <ModeToggle />
+        <ProfileDropdown />
       </div>
       
     </header>

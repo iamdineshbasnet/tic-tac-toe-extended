@@ -255,7 +255,7 @@ const Board: React.FC<BoardProps> = ({ type = 'bot', player, random = false }) =
 								</AlertDialogTitle>
 							</AlertDialogHeader>
 							<AlertDialogDescription>
-								<div className="flex items-center space-x-2">
+								<div className="flex items-center space-x-2 my-6 justify-center">
 									<Switch
 										id="random-turn"
 										onCheckedChange={handleSwitchChange}
