@@ -1,41 +1,43 @@
-const express = require('express')
-const cors = require('cors')
-const http = require('http')
-const socketIO = require('socket.io')
+const express = require('express');
+const cors = require('cors');
+const http = require('http');
+const socketIO = require('socket.io');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
+const dotenv = require('dotenv');
+const connectDB = require('./config/db');
+const Auth = require('./routes/auth')
 const app = express();
-const PORT = 3000;
+
+//Middlewares
+dotenv.config();
+app.use(express.json());
+app.use(cors());
+app.use(cookieParser());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// connect to the database
+connectDB();
+
+// Define PORT
+const PORT = process.env.PORT || 3000;
 
 const server = http.createServer(app);
 
 const io = socketIO(server, {
 	cors: {
-		origin: 'http://localhost:5173',
+		origin: process.env.ALLOWED_HOST,
 		methods: ['get', 'post'],
 	},
 });
 
-io.on("connection", (socket) => {
-  console.log("A user connected");
+const VERSION =`/api/${process.env.VERSION}`
 
-  socket.on("makeMove", (data) => {
-    io.emit("moveMade", data);
-  });
+// routes
+app.use(`${VERSION}/auth`, Auth)
 
-  socket.on("resetGame", (newGame) => {
-    io.emit("gameReset", newGame);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
-  });
-});
-
-app.use(cors());
-
-app.get("/game", (req, res) => {
-  res.status(200).send("Tic Tac Toe Game Server");
-});
 
 server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+	console.log(`Server running at http://localhost:${PORT}`);
 });
