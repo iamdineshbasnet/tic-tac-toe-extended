@@ -1,4 +1,4 @@
-const { generateRandomUsername } = require("../config/randomUsername")
+const { generateRandomUsername } = require("../config/generateRandom")
 const player = require("../model/player")
 
 
