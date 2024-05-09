@@ -3,9 +3,9 @@ import UserCard from '@/components/card';
 import { commonAppSelector } from '@/redux/selector';
 import { useAppSelector } from '@/utils/hooks/appHooks';
 import React from 'react';
-
 const Playground: React.FC = () => {
 	const { round, mode } = useAppSelector(commonAppSelector);
+
 
 	const pvp = [
 		{
