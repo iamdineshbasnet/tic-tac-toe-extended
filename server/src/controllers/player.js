@@ -10,7 +10,8 @@ const getPlayer = async (req, res) => {
 		if (!playerDetails) {
 			return res.status(404).json({ status: 'failed', message: `player not found` });
 		}
-		console.log(playerDetails, 'player');
+
+		playerDetails.password = undefined
 
 		res.status(200).json({ stauts: 'success', result: playerDetails });
 	} catch (error) {

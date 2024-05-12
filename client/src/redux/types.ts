@@ -9,4 +9,5 @@ export interface PlayerProps{
 export interface CommonProps{
   round: number;
   mode: string;
+  roomCode: string;
 }

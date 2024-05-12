@@ -2,10 +2,13 @@ import UserCard from '@/components/card';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { commonAppSelector } from '@/redux/selector';
+import { useAppSelector } from '@/utils/hooks/appHooks';
 import { Check, Copy } from 'lucide-react';
 import React from 'react';
 
 const WaitingRoom: React.FC = () => {
+	const { roomCode } = useAppSelector(commonAppSelector)
 	const pvp = [
 		{
 			id: 1,
@@ -31,7 +34,7 @@ const WaitingRoom: React.FC = () => {
 				<CardContent>
 					<section className="flex items-center gap-4">
 						<Input
-							value="222222"
+							value={roomCode}
 							readOnly
 							className="text-2xl text-center font-semibold my-6 py-6 tracking-wider"
 						/>

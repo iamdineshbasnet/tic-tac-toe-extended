@@ -3,7 +3,8 @@ import { CommonProps } from './types';
 
 const initialState: CommonProps = {
 	round: 1,
-	mode: ''
+	mode: '',
+	roomCode: ''
 };
 
 const commonSlice = createSlice({
@@ -15,10 +16,13 @@ const commonSlice = createSlice({
 		},
 		setMode: (state, { payload }) =>{
 			state.mode = payload
+		},
+		setRoomCode: (state, { payload })=>{
+			state.roomCode = payload
 		}
 	},
 });
 
-export const { setRound, setMode } =
+export const { setRound, setMode, setRoomCode } =
 	commonSlice.actions;
 export default commonSlice.reducer;
