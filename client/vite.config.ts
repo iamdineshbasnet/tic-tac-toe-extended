@@ -2,10 +2,13 @@ import path from 'path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import envCompatible from 'vite-plugin-env-compatible'
 
 export default defineConfig({
+	envPrefix: 'REACT_',
 	plugins: [
 		react(),
+		envCompatible(),
 		VitePWA({
 			registerType: 'prompt',
 			includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],

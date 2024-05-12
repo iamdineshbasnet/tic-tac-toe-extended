@@ -7,7 +7,10 @@ const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const Auth = require('./routes/auth');
+const Player = require('./routes/player');
 const { generateRoomId } = require('./config/generateRandom');
+
+// express app
 const app = express();
 
 //Middlewares
@@ -87,6 +90,7 @@ const VERSION = `/api/${process.env.VERSION}`;
 
 // routes
 app.use(`${VERSION}/auth`, Auth);
+app.use(`${VERSION}/player`, Player);
 
 server.listen(PORT, () => {
 	console.log(`Server running at http://localhost:${PORT}`);

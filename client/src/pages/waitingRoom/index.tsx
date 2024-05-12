@@ -24,7 +24,7 @@ const WaitingRoom: React.FC = () => {
 	];
 	return (
 		<main className="mt-12">
-			<Card className="max-w-[600px] mx-auto">
+			<Card className="max-w-[500px] mx-auto">
 				<CardHeader className="text-center font-semibold text-2xl">
 					Generated Code
 				</CardHeader>

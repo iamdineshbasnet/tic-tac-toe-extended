@@ -29,6 +29,10 @@ const Player = new Schema({
     type: Boolean,
     default: true,
   },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
   password: {
 		type: String,
 		require: false,

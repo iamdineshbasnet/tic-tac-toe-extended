@@ -1,7 +1,11 @@
-const { express } = require('express')
+const express = require('express')
+const { getPlayer } = require('../controllers/player')
+const { Authenticate } = require('../config/authenticate')
 
-const route = express.Route()
+const router = express.Router()
+
+// get player
+router.get('/', Authenticate, getPlayer)
 
 
-
-module.exports = route
+module.exports = router

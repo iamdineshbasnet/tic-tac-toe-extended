@@ -1,6 +1,6 @@
 const { generateRandomUsername } = require("../config/generateRandom")
 const player = require("../model/player")
-
+const jwt = require('jsonwebtoken')
 
 const createGuest = async(req, res) =>{
   try {
@@ -16,7 +16,11 @@ const createGuest = async(req, res) =>{
 
     await guest.save()
 
-    res.status(201).json({ status: 'success', result: guest})
+    // GENERATE ACCESS AND REFRESH TOKEN
+    const accessToken = jwt.sign({ id: guest?._id, username: guest?.username }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d'})
+    const refreshToken = jwt.sign({ id: guest?._id, username: guest?.username }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d'})
+
+    res.status(201).json({ status: 'success', result: guest, accessToken, refreshToken})
 
     
   } catch (error) {

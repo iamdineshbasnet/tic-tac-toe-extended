@@ -7,6 +7,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { persistor, store } from './utils/store';
 import { Provider } from 'react-redux';
 import WaitingRoom from './pages/waitingRoom';
+import JoiningRoom from './pages/joiningRoom';
 function App() {
 	return (
 		<ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -18,6 +19,7 @@ function App() {
 								<Route path="/" element={<Homepage />} />
 								<Route path="/playground" element={<Playground />} />
 								<Route path="/waiting-room" element={<WaitingRoom />} />
+								<Route path="/joining-room" element={<JoiningRoom />} />
 							</Routes>
 						</Router>
 					</Layout>

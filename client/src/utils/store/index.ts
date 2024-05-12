@@ -11,14 +11,19 @@ import {
     REGISTER,
 } from "redux-persist";
 import commonReducer from '@/redux/slice';
+import authReducer from "@/pages/auth/redux/authSlice";
+import profileReducer from "@/pages/profile/redux/profileSlice";
 const persistConfig = {
     key: "root",
     storage: storage,
-    whitelist: [""],
+    // store the reducer
+    whitelist: ["auth"],
 };
 
 const rootReducer = combineReducers({
-    common: commonReducer
+    common: commonReducer,
+    auth: authReducer,
+    profile: profileReducer,
 });
 //ensures your redux state is stored to persisted storage whenever it changes.
 const persistedReducer = persistReducer(persistConfig, rootReducer);

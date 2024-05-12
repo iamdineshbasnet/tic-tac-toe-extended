@@ -1,17 +1,29 @@
 import { Button } from '@/components/ui/button';
 import { setMode, setRound } from '@/redux/slice';
-import { useAppDispatch } from '@/utils/hooks/appHooks';
+import { useAppDispatch, useAppSelector } from '@/utils/hooks/appHooks';
 import { Bot, Globe, User, Users } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CreateUser from './create';
 import Modal from '@/components/modal';
+import { profileSelector } from '../profile/redux/selector';
 
 const Homepage: React.FC = () => {
 	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
 	const [showModal, setShowModal] = useState<boolean>(false);
-	
+	const [isOnline, setIsOnline] = useState<boolean>(false);
+
+	const { player } = useAppSelector(profileSelector);
+
+	useEffect(() => {
+		if (!window.navigator.onLine) {
+			setIsOnline(false);
+		} else {
+			setIsOnline(true);
+		}
+	}, []);
+
 	const handleMode = (mode: string) => {
 		switch (mode) {
 			case 'friends':
@@ -44,18 +56,32 @@ const Homepage: React.FC = () => {
 			</h5>
 			<ul>
 				<li className="mb-4">
-					<Modal {...modalProps}>
+					{player ? (
 						<Button
+							disabled={!isOnline}
 							className="w-[200px] font-semibold text-md"
-							onClick={() => setShowModal(true)}>
+							onClick={() => navigate('/joining-room')}>
 							<Users strokeWidth={2} size={20} className="me-2" />
 							Friends
 						</Button>
-					</Modal>
+					) : (
+						<Modal {...modalProps}>
+							<Button
+								disabled={!isOnline}
+								className="w-[200px] font-semibold text-md"
+								onClick={() => setShowModal(true)}>
+								<Users strokeWidth={2} size={20} className="me-2" />
+								Friends
+							</Button>
+						</Modal>
+					)}
 				</li>
 				<li className="mb-4">
 					<Modal {...modalProps}>
-						<Button className="w-[200px] font-semibold text-md" onClick={() => setShowModal(true)}>
+						<Button
+							disabled={!isOnline}
+							className="w-[200px] font-semibold text-md"
+							onClick={() => setShowModal(true)}>
 							<Globe strokeWidth={2} size={20} className="me-2" />
 							Multiplayer
 						</Button>
