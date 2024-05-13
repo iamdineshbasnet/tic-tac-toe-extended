@@ -37,54 +37,10 @@ const io = socketIO(server, {
 	},
 });
 
-// track of rooms and their players
-const rooms = new Map();
-
 io.on('connection', (socket) => {
-	// create a room
-	socket.on('createRoom', () => {
-		const roomId = generateRoomId();
-		rooms.set(roomId, { players: [socket.id] });
-		socket.emit('roomCreated', roomId);
-	});
-
-	// join a room
-	socket.on('joinRoom', (roomId) => {
-		const room = rooms.get(roomId);
-		if (room) {
-			room.players.push(socket.id);
-			socket.join(roomId);
-			io.to(socket.id).emit('joinedRoom', roomId);
-		} else {
-			socket.emit('roomNotFound');
-		}
-	});
-
-	// leave a room
-	socket.on('leaveRoom', (roomId) => {
-		const room = rooms.get(roomId);
-		if (room) {
-			const index = room.players.indexOf(socket.id);
-			if (index !== -1) {
-				room.players.splice(index, 1);
-			}
-			socket.leave(roomId);
-			io.to(socket.id).emit('leftRoom', roomId);
-		} else {
-			socket.emit('roomNotFound');
-		}
-	});
-
-	socket.on('disconnect', () => {
-		console.log('Client disconnected');
-		rooms.forEach((room) => {
-			const index = room.players.indexOf(socket.id);
-			if (index !== -1) {
-				room.players.splice(index, 1);
-			}
-		});
-	});
+  
 });
+
 
 const VERSION = `/api/${process.env.VERSION}`;
 
