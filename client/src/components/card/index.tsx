@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlayerProps } from '@/redux/types';
+import { PlayerProps } from '@/pages/room/redux/types';
 
 interface UserCardProps {
 	data: PlayerProps

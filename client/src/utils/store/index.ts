@@ -10,7 +10,7 @@ import {
     PURGE,
     REGISTER,
 } from "redux-persist";
-import commonReducer from '@/redux/slice';
+import roomReducer from '@/pages/room/redux/roomSlice';
 import authReducer from "@/pages/auth/redux/authSlice";
 import profileReducer from "@/pages/profile/redux/profileSlice";
 const persistConfig = {
@@ -21,7 +21,7 @@ const persistConfig = {
 };
 
 const rootReducer = combineReducers({
-    common: commonReducer,
+    room: roomReducer,
     auth: authReducer,
     profile: profileReducer,
 });

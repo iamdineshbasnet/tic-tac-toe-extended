@@ -1,11 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { setRoomCode } from '@/redux/slice';
 import { socket } from '@/socket'
 import { useAppDispatch } from '@/utils/hooks/appHooks';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { setRoomCode } from '../redux/roomSlice';
 
 const JoiningRoom: React.FC = () => {
   const [roomId, setRoomId] = useState<string>("")

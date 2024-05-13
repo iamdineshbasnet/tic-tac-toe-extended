@@ -1,10 +1,10 @@
 import Board from '@/components/board';
 import UserCard from '@/components/card';
-import { commonAppSelector } from '@/redux/selector';
 import { useAppSelector } from '@/utils/hooks/appHooks';
 import React from 'react';
+import { roomSelector } from '../redux/selector';
 const Playground: React.FC = () => {
-	const { round, mode } = useAppSelector(commonAppSelector);
+	const { round, mode } = useAppSelector(roomSelector);
 
 
 	const pvp = [

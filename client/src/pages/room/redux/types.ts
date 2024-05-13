@@ -6,7 +6,7 @@ export interface PlayerProps{
   win: number;
 }
 
-export interface CommonProps{
+export interface RoomProps{
   round: number;
   mode: string;
   roomCode: string;

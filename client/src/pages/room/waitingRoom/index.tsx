@@ -2,13 +2,13 @@ import UserCard from '@/components/card';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { commonAppSelector } from '@/redux/selector';
 import { useAppSelector } from '@/utils/hooks/appHooks';
 import { Check, Copy } from 'lucide-react';
 import React from 'react';
+import { roomSelector } from '../redux/selector';
 
 const WaitingRoom: React.FC = () => {
-	const { roomCode } = useAppSelector(commonAppSelector)
+	const { roomCode } = useAppSelector(roomSelector)
 	const pvp = [
 		{
 			id: 1,

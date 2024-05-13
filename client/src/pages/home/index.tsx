@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { setMode, setRound } from '@/redux/slice';
 import { useAppDispatch, useAppSelector } from '@/utils/hooks/appHooks';
 import { Bot, Globe, User, Users } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
@@ -7,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import CreateUser from './create';
 import Modal from '@/components/modal';
 import { profileSelector } from '../profile/redux/selector';
+import { setMode, setRound } from '../room/redux/roomSlice';
 
 const Homepage: React.FC = () => {
 	const navigate = useNavigate();

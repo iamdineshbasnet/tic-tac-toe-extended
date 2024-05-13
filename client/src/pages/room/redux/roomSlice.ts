@@ -1,14 +1,14 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { CommonProps } from './types';
+import { RoomProps } from './types';
 
-const initialState: CommonProps = {
+const initialState: RoomProps = {
 	round: 1,
 	mode: '',
 	roomCode: ''
 };
 
-const commonSlice = createSlice({
-	name: 'common',
+const roomSlice = createSlice({
+	name: 'room',
 	initialState,
 	reducers: {
 		setRound: (state, { payload })=>{
@@ -24,5 +24,5 @@ const commonSlice = createSlice({
 });
 
 export const { setRound, setMode, setRoomCode } =
-	commonSlice.actions;
-export default commonSlice.reducer;
+	roomSlice.actions;
+export default roomSlice.reducer;

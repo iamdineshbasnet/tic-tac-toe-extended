@@ -12,12 +12,12 @@ import {
 } from '../ui/alert-dialog';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/utils/hooks/appHooks';
-import { commonAppSelector } from '@/redux/selector';
-import { setRound } from '@/redux/slice';
-import { PlayerProps } from '@/redux/types';
+import { PlayerProps } from '@/pages/room/redux/types';
 import { Switch } from '../ui/switch';
 import useLocalStorage from 'use-local-storage';
 import { Label } from '../ui/label';
+import { roomSelector } from '@/pages/room/redux/selector';
+import { setRound } from '@/pages/room/redux/roomSlice';
 interface BoardProps {
 	type: 'bot' | 'player';
 	choice?: 'x' | 'o';
@@ -54,7 +54,7 @@ const Board: React.FC<BoardProps> = ({ type = 'bot', player, random = false }) =
 	// current player obj
 	const [currentPlayer, setCurrentPlayer] = useState<PlayerProps>(player[0]);
 
-	const { round } = useAppSelector(commonAppSelector);
+	const { round } = useAppSelector(roomSelector);
 
 	// get current player
 	useEffect(() => {
