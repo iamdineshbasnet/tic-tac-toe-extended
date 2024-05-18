@@ -4,7 +4,8 @@ import { RoomProps } from './types';
 const initialState: RoomProps = {
 	round: 1,
 	mode: '',
-	roomCode: ''
+	roomCode: '',
+	roomDetails: null,
 };
 
 const roomSlice = createSlice({
@@ -19,10 +20,13 @@ const roomSlice = createSlice({
 		},
 		setRoomCode: (state, { payload })=>{
 			state.roomCode = payload
+		},
+		setRoomDetails: (state, { payload })=>{
+			state.roomDetails = payload
 		}
 	},
 });
 
-export const { setRound, setMode, setRoomCode } =
+export const { setRound, setMode, setRoomCode, setRoomDetails } =
 	roomSlice.actions;
 export default roomSlice.reducer;

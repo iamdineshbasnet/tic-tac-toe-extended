@@ -6,7 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import CreateUser from './create';
 import Modal from '@/components/modal';
 import { profileSelector } from '../profile/redux/selector';
-import { setMode, setRound } from '../room/redux/roomSlice';
+import { setMode, setRoomCode, setRoomDetails, setRound } from '../room/redux/roomSlice';
+import { socket } from '@/socket';
 
 const Homepage: React.FC = () => {
 	const navigate = useNavigate();
@@ -29,6 +30,7 @@ const Homepage: React.FC = () => {
 			case 'friends':
 				break;
 			case 'multiplayer':
+				dispatch(setMode('pvp'))
 				break;
 			case 'pvp':
 				dispatch(setMode('pvp'));
@@ -43,6 +45,14 @@ const Homepage: React.FC = () => {
 		navigate('/playground');
 	};
 
+	const findPlayer = () =>{
+		socket.emit('find', player)
+		socket.on('find', (data: any)=>{
+			dispatch(setRoomDetails(data))
+			dispatch(setRoomCode(data?.roomId))
+		})
+		navigate('/finding-room')
+	}
 	const modalProps = {
 		title: 'Who are you?',
 		body: <CreateUser />,
@@ -77,15 +87,25 @@ const Homepage: React.FC = () => {
 					)}
 				</li>
 				<li className="mb-4">
-					<Modal {...modalProps}>
+					{!player ? (
+						<Modal {...modalProps}>
+							<Button
+								disabled={!isOnline}
+								className="w-[200px] font-semibold text-md"
+								onClick={() => setShowModal(true)}>
+								<Globe strokeWidth={2} size={20} className="me-2" />
+								Multiplayer
+							</Button>
+						</Modal>
+					) : (
 						<Button
 							disabled={!isOnline}
 							className="w-[200px] font-semibold text-md"
-							onClick={() => setShowModal(true)}>
+							onClick={findPlayer}>
 							<Globe strokeWidth={2} size={20} className="me-2" />
 							Multiplayer
 						</Button>
-					</Modal>
+					)}
 				</li>
 			</ul>
 			<h5 className="capitalize mt-8 mb-4 font-semibold">

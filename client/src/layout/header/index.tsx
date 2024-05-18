@@ -10,7 +10,6 @@ const Header: React.FC = () => {
   const dispatch = useAppDispatch()
 
   const isAuthenticated = getCookie('accessToken')
-
   useEffect(()=>{
     isAuthenticated && dispatch(getPlayer())
   }, [isAuthenticated])

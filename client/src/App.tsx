@@ -8,6 +8,7 @@ import { persistor, store } from './utils/store';
 import { Provider } from 'react-redux';
 import WaitingRoom from './pages/room/waitingRoom';
 import JoiningRoom from './pages/room/joiningRoom';
+import FindingRoom from './pages/room/finding';
 function App() {
 	return (
 		<ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -17,9 +18,10 @@ function App() {
 						<Router>
 							<Routes>
 								<Route path="/" element={<Homepage />} />
-								<Route path="/playground" element={<Playground />} />
+								<Route path="/playground/:id" element={<Playground />} />
 								<Route path="/waiting-room" element={<WaitingRoom />} />
 								<Route path="/joining-room" element={<JoiningRoom />} />
+								<Route path="/finding-room" element={<FindingRoom />} />
 							</Routes>
 						</Router>
 					</Layout>
