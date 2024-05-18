@@ -37,8 +37,34 @@ const io = socketIO(server, {
 	},
 });
 
+let players = []
+let participants = []
 io.on('connection', (socket) => {
-  
+	console.log('socket', socket)
+
+	socket.on("find", (player)=>{
+		console.log(player, 'playerplayer')
+		if(player){
+			players.push(player)
+			if(players.length >= 2){
+				let first_player = {
+					name: players[0].name,
+					mark: 'x',
+				}
+				let second_player ={
+					name: players[1].name,
+					mark: 'o'
+				}
+
+				let obj ={ first_player, second_player}
+				console.log(obj, 'objobjobj')
+				participants.push(obj)
+
+				console.log(participants, 'participants')
+				socket.emit("find", participants)
+			}
+		}
+	})
 });
 
 

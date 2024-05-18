@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Form, Formik } from 'formik';
 import { useAppDispatch } from '@/utils/hooks/appHooks';
 import { createGuest } from '../auth/redux/thunk';
+import { socket } from '@/socket';
 
 const CreateUser: React.FC = () => {
 	const dispatch = useAppDispatch();
@@ -18,7 +19,10 @@ const CreateUser: React.FC = () => {
 		dispatch(createGuest(values))
 			.unwrap()
 			.then((res) => {
+
 				res?.accessToken && navigate('/joining-room');
+				const player: any = { name : values?.name}
+				socket.on("find", player)
 			})
 			.catch((error) => {
 				console.log(error, 'error');
