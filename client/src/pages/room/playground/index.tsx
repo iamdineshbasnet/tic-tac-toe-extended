@@ -1,8 +1,10 @@
 import Board from '@/components/board';
 import UserCard from '@/components/card';
-import { useAppSelector } from '@/utils/hooks/appHooks';
-import React from 'react';
+import { useAppDispatch, useAppSelector } from '@/utils/hooks/appHooks';
+import React, { useEffect } from 'react';
 import { roomSelector } from '../redux/selector';
+import { getRoomDetails } from '../redux/thunk';
+import { useLocation } from 'react-router-dom';
 const bot = [
 	{
 		_id: 1, 
@@ -20,19 +22,57 @@ const bot = [
 	}
 ]
 const Playground: React.FC = () => {
+	const dispatch = useAppDispatch()
 	const { round, mode, roomDetails } = useAppSelector(roomSelector);
+	const { pathname } = useLocation()
+	const id = pathname.split('/playground/')[1]
 	console.log(roomDetails, 'room details')
+
+	
+	useEffect(()=>{
+		dispatch(getRoomDetails(id))
+	}, [id])
 	
 
-	const pvp = roomDetails && roomDetails.participants
-	const player = mode === 'pvp' ? pvp : pvp
-	const xPlayer = player?.find((p)=> p.mark === 'x')
-	const oPlayer = player?.find((p)=> p.mark === 'o')
+	const pvp = [
+		{
+			id: 1,
+			name: 'Player 1',
+			win: 0,
+			mark: 'x',
+			image: 'https://i.imgur.com/A0vPzPd.jpg',
+		},
+		{
+			id: 2,
+			name: 'Player 2',
+			win: 0,
+			mark: 'o',
+			image: 'https://i.imgur.com/A0vPzPd.jpg',
+		},
+	];
+
+	const bot = [
+		{
+			id: 1, 
+			name: 'Player 1',
+			win: 0,
+			mark: 'x',
+			image: 'https://i.imgur.com/A0vPzPd.jpg'
+		},
+		{
+			id: 2,
+			name: "Bot",
+			win: 0,
+			mark: 'o',
+			image: 'https://i.imgur.com/6QoGbID.png'
+		}
+	]
+	const player = mode === 'pvp' ? pvp : bot
+
 	return (
 		<main className="mt-20 w-[900px] mx-auto">
 			<section className="flex justify-between gap-12">
-				{/* @ts-ignore */}
-				<UserCard data={xPlayer} />
+				<UserCard data={player[0]} />
 				<div className="w-[80px] h-[80px] aspect-square border rounded-full flex items-center flex-col justify-center">
 					<p className="text-center text-sm">
 						{round}
@@ -40,19 +80,16 @@ const Playground: React.FC = () => {
 					</p>
 					<h5 className="text-center text-sm">Round</h5>
 				</div>
-				{/* @ts-ignore */}
-				<UserCard data={oPlayer} />
+				<UserCard data={player[1]} />
 			</section>
 			<section className="flex items-center justify-center mt-24">
 				{mode === 'pvp' ? (
-				<Board type="player"
-				// @ts-ignore
-				player={player} />
+				// <Board type="player" player={player} />
+				'pvp'
 			) : (
-				<Board type="player"
-				// @ts-ignore				
-				player={player} />
-				)}
+				// <Board type="bot" player={player} />
+				'bot'
+			)}
 			</section>
 		</main>
 	);

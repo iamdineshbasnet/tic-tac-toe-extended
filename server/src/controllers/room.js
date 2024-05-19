@@ -1,4 +1,5 @@
-const { generateRoomId, generateRandomString } = require('../config/generateRandom');
+const { generateRoomId } = require('../config/generateRandom');
+const player = require('../model/player');
 const room = require('../model/room');
 
 // create room
@@ -10,44 +11,74 @@ const createRoom = async (req, res) => {
 			return res.status(401).json({ status: 'failed', message: 'Unauthorized!' });
 		}
 
+		// Find the Player by username
+		const isPlayerExist = await player.findOne({ username });
+		if (!isPlayerExist) {
+			return res.status(404).json({ status: 'failed', message: 'Player not found!' });
+		}
+
 		// generate room id
 		const roomId = generateRoomId();
-		const generatedString = generateRandomString(8)
 
 		const createdRoom = new room({
 			roomId,
-			participants: username,
-			link: roomLink,
-			creator: username,
-			uid: generatedString,
+			participants: [isPlayerExist._id],
+			creator: isPlayerExist._id,
 		});
 
-		await createRoom.save();
+		await createdRoom.save();
 
-		res.status(201).json({ status: 'success', result: createdRoom });
+		const populatedRoom = await room
+			.findById(createdRoom._id)
+			.populate('participants', 'username image isGuest name win')
+			.populate('creator', 'username image isGuest name win');
+
+		res.status(201).json({ status: 'success', result: populatedRoom });
 	} catch (error) {
+		console.log(error.message);
 		res.status(500).json({ status: 'error', message: error.message });
 	}
 };
 
-// get room details
+// join the room
 const joinRoom = async (req, res) => {
 	try {
 		const { username } = req.player;
-		const { uid, id } = req.params;
+		const { id } = req.params;
 
 		if (!username) {
 			return res.status(401).json({ status: 'failed', message: 'Unauthorized!' });
 		}
 
-		const roomDetails = await room.findOne({ uid, roomId: id });
+		// Find the Player by username
+		const isPlayerExist = await player.findOne({ username });
+		if (!isPlayerExist) {
+			return res.status(404).json({ status: 'failed', message: 'Player not found!' });
+		}
+
+		const roomDetails = await room.findOne({ roomId: id });
 
 		if (!roomDetails) {
 			return res.status(404).json({ status: 'failed', message: 'Room not found' });
 		}
 
+		if (roomDetails?.participants.length >= 2) {
+			return res.status(200).json({ status: 'success', message: 'Room is already full' });
+		}
+
+		// Check if the player is already a participant
+		const isAlreadyParticipant = roomDetails.participants.some((participantId) =>
+			participantId.equals(isPlayerExist._id)
+		);
+
+		if (isAlreadyParticipant) {
+			return res
+				.status(400)
+				.json({ status: 'failed', message: 'Player already in the room' });
+		}
+
 		// Add participant to the room
-		roomDetails.participants.push(username);
+		roomDetails.participants.push(isPlayerExist?._id);
 		await roomDetails.save();
 
 		res.status(200).json({ status: 'success', result: roomDetails });
@@ -57,24 +88,23 @@ const joinRoom = async (req, res) => {
 };
 
 // get the room details
-const getRoomDetails = async(req, res) =>{
+const getRoomDetails = async (req, res) => {
 	try {
+		const { id } = req.params;
 
-		const { uid, id } = req.params
+		const roomDetails = await room
+			.findOne({ roomId: id })
+			.populate('participants', 'username image isGuest name win')
+			.populate('creator', 'username image isGuest name win');
 
-		const roomDetails = await room.findOne({ uid, roomId: id })
-
-		if(!roomDetails){
-			return res.status(404).json({ status: 'failed', message: 'room not found'})
+		if (!roomDetails) {
+			return res.status(404).json({ status: 'failed', message: 'room not found' });
 		}
-		
-		res.status(200).json({ status: 'success', result: roomDetails})
 
-
+		res.status(200).json({ status: 'success', result: roomDetails });
 	} catch (error) {
-		res.status(500).json({ status: 'error', message: error.message})
-		
+		res.status(500).json({ status: 'error', message: error.message });
 	}
-}
+};
 
 module.exports = { createRoom, joinRoom, getRoomDetails };

@@ -8,9 +8,9 @@ const router = express.Router()
 router.post('/', Authenticate, createRoom)
 
 // join room
-router.put('/:uid/:id', Authenticate, joinRoom)
+router.put('/:id', Authenticate, joinRoom)
 
 // get room details
-router.get('/:uid/:id', getRoomDetails)
+router.get('/:id', getRoomDetails)
 
 module.exports = router

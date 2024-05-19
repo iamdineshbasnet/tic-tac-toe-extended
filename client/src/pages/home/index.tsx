@@ -42,16 +42,16 @@ const Homepage: React.FC = () => {
 				break;
 		}
 		dispatch(setRound(1));
-		navigate('/playground');
+		// navigate('/playground');
 	};
 
 	const findPlayer = () =>{
-		socket.emit('find', player)
-		socket.on('find', (data: any)=>{
-			dispatch(setRoomDetails(data))
-			dispatch(setRoomCode(data?.roomId))
-		})
-		navigate('/finding-room')
+		// socket.emit('find', player)
+		// socket.on('find', (data: any)=>{
+		// 	dispatch(setRoomDetails(data))
+		// 	dispatch(setRoomCode(data?.roomId))
+		// })
+		// navigate('/finding-room')
 	}
 	const modalProps = {
 		title: 'Who are you?',

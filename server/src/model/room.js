@@ -13,9 +13,6 @@ const Room = new Schema({
 		type: Schema.Types.ObjectId,
 		ref: 'Player',
 	},
-  uid:{
-    type: String,
-  },
 	roomId: {
 		type: Number,
 	},

@@ -19,7 +19,7 @@ function App() {
 							<Routes>
 								<Route path="/" element={<Homepage />} />
 								<Route path="/playground/:id" element={<Playground />} />
-								<Route path="/waiting-room" element={<WaitingRoom />} />
+								<Route path="/waiting-room/:id" element={<WaitingRoom />} />
 								<Route path="/joining-room" element={<JoiningRoom />} />
 								<Route path="/finding-room" element={<FindingRoom />} />
 							</Routes>

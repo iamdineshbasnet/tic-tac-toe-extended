@@ -7,7 +7,6 @@ interface UserCardProps {
 }
 const UserCard: React.FC<UserCardProps> = ({ data }) => {
 	const { name, mark, image } = data
-	console.log(name, mark, image, 'name mark and image	')
 	return (
 		<Card className="relative w-full">
 			<CardContent className="p-4">
