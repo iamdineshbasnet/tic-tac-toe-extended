@@ -46,14 +46,18 @@ const WaitingRoom: React.FC = () => {
 			roomId: parseInt(id),
 			board: Array(9).fill(''),
 			turn: 'x',
+			isGameStart: true,
+			creator: creatorData,
 			participants: [creatorData, otherPlayerData],
 		};
 		socket.emit('startGame', obj);
-		socket.on('gameStarted', (data) => {
-			console.log(data, 'datad after game started');
-		});
 		navigate(`/playground/${id}`);
 	};
+
+	socket.on('gameStarted', (data) => {
+		dispatch(setRoomDetails(data));
+		navigate(`/playground/${data.roomId}`);
+	});
 	return (
 		<main className="mt-12 max-w-[500px] mx-auto">
 			<Card>

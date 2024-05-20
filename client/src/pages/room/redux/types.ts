@@ -5,6 +5,7 @@ export interface PlayerProps{
   image: string;
   win: number;
   username: string;
+  isGuest: boolean;
 }
 
 
@@ -12,7 +13,7 @@ export interface RoomDetailsProps{
   roomId: number;
   participants: PlayerProps[]
   turn?: string;
-  board?: string[]
+  board: string[]
   creator: PlayerProps 
 }
 export interface RoomProps{

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import ClickSound from '@/assets/click.mp3';
 import {
   AlertDialog,
@@ -18,22 +18,24 @@ import useLocalStorage from 'use-local-storage';
 import { Label } from '../ui/label';
 import { roomSelector } from '@/pages/room/redux/selector';
 import { setRound } from '@/pages/room/redux/roomSlice';
-import { socket } from '@/socket';
 
 interface BoardProps {
   type: 'bot' | 'player';
   choice?: 'x' | 'o';
   player: PlayerProps[];
   random?: boolean;
+  board: string[];
+  setBoard: Dispatch<SetStateAction<string[]>>
+  turn: string;
+  setTurn: Dispatch<SetStateAction<string>>
+  makemove: () => void;
 }
 
-const Board: React.FC<BoardProps> = ({ type = 'player', player, random = false }) => {
+const Board: React.FC<BoardProps> = ({ type = 'player', player, random = false, board, setBoard, turn, setTurn, makemove }) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [randomTurn, setRandomTurn] = useLocalStorage('game', { random: random });
 
-  // State to manage cell data
-  const [data, setData] = useState<string[]>(['', '', '', '', '', '', '', '', '']);
 
   // State to indicate if the game ended in a draw
   const [isDraw, setIsDraw] = useState<boolean>(false);
@@ -50,65 +52,46 @@ const Board: React.FC<BoardProps> = ({ type = 'player', player, random = false }
   // state to open the dialog after certain interval
   const [showDialog, setShowDialog] = useState(false);
 
-  // State to track current player's turn
-  const [turn, setTurn] = useState<string>('x');
-
   // State to track current player
   const [currentPlayer, setCurrentPlayer] = useState<PlayerProps>(player[0]);
 
-  const { round, roomCode, roomDetails } = useAppSelector(roomSelector);
+  const { round } = useAppSelector(roomSelector);
 
-  // useEffect to listen for updates from the server
-  useEffect(() => {
-    socket.on('update', (room: any) => {
-      console.log(room, 'room');
-      setData(room.board);
-      setTurn(room.turn);
-      const current_player = player.find((p) => p.mark === room.turn);
-      current_player && setCurrentPlayer(current_player);
-    });
-
-    return () => {
-      socket.off('update');
-    };
-  }, [player]);
 
   // useEffect to handle game end conditions
   useEffect(() => {
-    if (getWinnerMessage(checkWinner(data))) {
+    if (getWinnerMessage(checkWinner(board))) {
       const timer = setTimeout(() => {
         setShowDialog(true);
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [data]);
+  }, [board]);
 
   // function to draw
   const draw = (index: number) => {
-    const winner = checkWinner(data);
+    const winner = checkWinner(board);
 
-    if (data[index] === '' && winner === null && !isDraw) {
+    if (board[index] === '' && winner === null && !isDraw) {
       const nextTurn = turn === 'x' ? 'o' : 'x';
 
-      const newData = [...data];
+      const newData = [...board];
       newData[index] = turn;
 
       const newHistory = [...history, index];
       setHistory(newHistory);
 
-      setData(newData);
-      socket.emit('makeMove', { roomId: roomCode, board: newData, turn: nextTurn });
+      setBoard(newData);
       playClickSound();
-
       const emptyCellCount = newData.filter((symbol) => symbol === '').length;
       if (emptyCellCount <= 3) {
         setDisabledCell(newHistory[0]);
       }
       if (emptyCellCount === 2) {
-        const firstDrawnIndex = newHistory.find((id) => data[id] !== '');
+        const firstDrawnIndex = newHistory.find((id) => board[id] !== '');
         if (firstDrawnIndex !== undefined) {
           newData[firstDrawnIndex] = '';
-          setData(newData);
+          setBoard(newData);
 
           const updatedHistory = newHistory.filter((id) => id !== firstDrawnIndex);
           setHistory(updatedHistory);
@@ -123,11 +106,13 @@ const Board: React.FC<BoardProps> = ({ type = 'player', player, random = false }
         setCurrentPlayer(player.find((p) => p.mark === nextTurn) || player[0]);
       }
       checkDraw(newData);
+      makemove()
+
     }
   };
 
   // check winner
-  const checkWinner = (data: string[]) => {
+  const checkWinner = (board: string[]) => {
     // win conditions
     const conditions = [
       [0, 1, 2],
@@ -143,28 +128,28 @@ const Board: React.FC<BoardProps> = ({ type = 'player', player, random = false }
     for (let i = 0; i < conditions.length; i++) {
       const [x, y, z] = conditions[i];
       // if conditions fullfilled then return  either 'X' or 'O'
-      if (data[x] && data[x] === data[y] && data[x] === data[z]) {
+      if (board[x] && board[x] === board[y] && board[x] === board[z]) {
         // update the state of winning cells
         if (winningCombination.length === 0) {
           setWinningCombination([x, y, z]);
         }
-        return data[x];
+        return board[x];
       }
     }
     return null;
   };
 
   // check if the match draw
-  const checkDraw = (data: string[]) => {
-    const isBoardFull = data.every((symbol) => symbol !== '' && checkWinner(data) === null);
-    if (isBoardFull && checkWinner(data) === null) {
+  const checkDraw = (board: string[]) => {
+    const isBoardFull = board.every((symbol) => symbol !== '' && checkWinner(board) === null);
+    if (isBoardFull && checkWinner(board) === null) {
       setIsDraw(true);
     }
   };
 
   // function to reset the board
   const resetBoard = () => {
-    setData(['', '', '', '', '', '', '', '', '']);
+    setBoard(['', '', '', '', '', '', '', '', '']);
     setIsDraw(false);
     setHistory([]);
     setDisabledCell(undefined);
@@ -208,7 +193,7 @@ const Board: React.FC<BoardProps> = ({ type = 'player', player, random = false }
   // bot moves function
   const makeBotMove = () => {
     // get the empty cell
-    const emptyCells = data.reduce((acc: number[], cell, index) => {
+    const emptyCells = board.reduce((acc: number[], cell, index) => {
       if (cell === '') {
         acc.push(index);
       }
@@ -244,11 +229,11 @@ const Board: React.FC<BoardProps> = ({ type = 'player', player, random = false }
   return (
     <section className="flex flex-col gap-16">
       <section className="board_layout">
-        {data?.map((item, index) => {
+        {board?.map((item, index) => {
           const cellClass = `border-2 border-foreground min-w-[100px] min-h-[100px] w-full h-full aspect-square text-7xl cell ${
             item === 'x' ? 'text-red-600' : 'text-blue-600'
           } ${winningCombination.includes(index) ? 'winning' : ''} ${
-            checkWinner(data) === 'x' ? 'animate_x' : 'animate_o'
+            checkWinner(board) === 'x' ? 'animate_x' : 'animate_o'
           }`;
           return (
             <section key={index} onClick={() => draw(index)} className={cellClass}>
@@ -264,7 +249,7 @@ const Board: React.FC<BoardProps> = ({ type = 'player', player, random = false }
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-2xl capitalize text-center">
-                  {getWinnerMessage(checkWinner(data))}
+                  {getWinnerMessage(checkWinner(board))}
                 </AlertDialogTitle>
               </AlertDialogHeader>
               <AlertDialogDescription>

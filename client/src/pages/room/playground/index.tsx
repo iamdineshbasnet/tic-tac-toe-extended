@@ -1,95 +1,100 @@
 import Board from '@/components/board';
 import UserCard from '@/components/card';
 import { useAppDispatch, useAppSelector } from '@/utils/hooks/appHooks';
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { roomSelector } from '../redux/selector';
-import { getRoomDetails } from '../redux/thunk';
 import { useLocation } from 'react-router-dom';
-const bot = [
-	{
-		_id: 1, 
-		name: 'Player 1',
-		win: 0,
-		mark: 'x',
-		image: 'https://i.imgur.com/A0vPzPd.jpg'
-	},
-	{
-		_id: 2,
-		name: "Bot",
-		win: 0,
-		mark: 'o',
-		image: 'https://i.imgur.com/6QoGbID.png'
-	}
-]
+import { socket } from '@/socket';
+import { setRoomDetails } from '../redux/roomSlice';
+
 const Playground: React.FC = () => {
-	const dispatch = useAppDispatch()
-	const { round, mode, roomDetails } = useAppSelector(roomSelector);
-	const { pathname } = useLocation()
-	const id = pathname.split('/playground/')[1]
-	console.log(roomDetails, 'room details')
+	const dispatch = useAppDispatch();
+	const { roomDetails } = useAppSelector(roomSelector);
+	const { pathname } = useLocation();
+	const id = pathname.split('/playground/')[1];
+	const [board, setBoard] = useState<string[]>(Array(9).fill(''));
+	const [turn, setTurn] = useState<string>('x');
 
-	
-	useEffect(()=>{
-		dispatch(getRoomDetails(id))
-	}, [id])
-	
+	console.log(board, turn , 'board and turn')
 
-	const pvp = [
-		{
-			id: 1,
-			name: 'Player 1',
-			win: 0,
-			mark: 'x',
-			image: 'https://i.imgur.com/A0vPzPd.jpg',
-		},
-		{
-			id: 2,
-			name: 'Player 2',
-			win: 0,
-			mark: 'o',
-			image: 'https://i.imgur.com/A0vPzPd.jpg',
-		},
-	];
+	const creator = roomDetails?.participants?.find((c) => c._id === roomDetails?.creator._id);
+	const otherPlayer = roomDetails?.participants?.find((c) => c._id !== roomDetails.creator._id);
 
-	const bot = [
-		{
-			id: 1, 
-			name: 'Player 1',
-			win: 0,
-			mark: 'x',
-			image: 'https://i.imgur.com/A0vPzPd.jpg'
-		},
-		{
-			id: 2,
-			name: "Bot",
-			win: 0,
-			mark: 'o',
-			image: 'https://i.imgur.com/6QoGbID.png'
-		}
-	]
-	const player = mode === 'pvp' ? pvp : bot
+	const creatorData = creator ? { ...creator, mark: 'x' } : null;
+	const otherPlayerData = otherPlayer ? { ...otherPlayer, mark: 'o' } : null;
 
+	useEffect(() => {
+		socket.emit('getDetails', parseInt(id));
+		socket.on('getDetails', (data) => {
+			dispatch(setRoomDetails(data));
+			if (data.turn) {
+				setTurn(data.turn);
+			}
+			setBoard(data?.board);
+		});
+
+		// Clean up the socket event listener on unmount
+		return () => {
+			socket.off('getDetails');
+		};
+	}, [id, dispatch]);
+
+	useEffect(() => {
+    socket.on('makemove', (data) => {
+			console.log(data, 'makemove data')
+      setBoard(data.board);
+      setTurn(data.turn);
+      dispatch(setRoomDetails(data));
+    });
+
+    // Clean up the socket event listener on unmount
+    return () => {
+      socket.off('makemove');
+    };
+  }, [dispatch]);
+
+	const makemove = useCallback(() => {
+    const obj = {
+      roomId: parseInt(id),
+      board,
+      turn,
+      isGameStart: true,
+      creator: creatorData,
+      participants: [creatorData, otherPlayerData],
+    };
+    socket.emit('makemove', obj);
+  }, [id, board, turn]);
 	return (
 		<main className="mt-20 w-[900px] mx-auto">
 			<section className="flex justify-between gap-12">
-				<UserCard data={player[0]} />
-				<div className="w-[80px] h-[80px] aspect-square border rounded-full flex items-center flex-col justify-center">
+				{creatorData && <UserCard data={creatorData} />}
+				{/* <div className="w-[80px] h-[80px] aspect-square border rounded-full flex items-center flex-col justify-center">
 					<p className="text-center text-sm">
 						{round}
 						<sup>st</sup>
 					</p>
 					<h5 className="text-center text-sm">Round</h5>
-				</div>
-				<UserCard data={player[1]} />
+				</div> */}
+				{otherPlayerData && <UserCard data={otherPlayerData} />}
 			</section>
 			<section className="flex items-center justify-center mt-24">
-				{mode === 'pvp' ? (
-				// <Board type="player" player={player} />
+				{roomDetails && creatorData && otherPlayerData && (
+					<Board
+						turn={turn}
+						setTurn={setTurn}
+						board={board}
+						setBoard={setBoard}
+						makemove={makemove}
+						type="player"
+						player={[creatorData, otherPlayerData]}
+					/>
+				)}
+				{/* {mode === 'pvp' ? (
 				'pvp'
 			) : (
-				// <Board type="bot" player={player} />
+				<Board type="bot" player={player} />
 				'bot'
-			)}
+			)} */}
 			</section>
 		</main>
 	);

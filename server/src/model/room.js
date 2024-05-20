@@ -8,6 +8,7 @@ const Room = new Schema({
 			type: Schema.Types.ObjectId,
 			ref: 'Player',
 		},
+		
 	],
 	creator: {
 		type: Schema.Types.ObjectId,

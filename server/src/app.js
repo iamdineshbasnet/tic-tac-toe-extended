@@ -47,14 +47,34 @@ io.on('connection', (socket) => {
 			.populate('participants', 'username image name isGuest win')
 			.populate('creator', 'username image name isGuest win');
 		if (roomDetails && roomDetails.participants.length <= 2) {
-			io.emit('join', roomDetails);
+			io.to(roomId).emit('join', roomDetails);
 		}
 	});
 
-  socket.on('startGame', (data)=>{
-    // console.log(data, 'data')
-    io.emit('gameStarted', data)
-  })
+	socket.on('startGame', (data) => {
+		// console.log(data, 'data')
+		io.to(data.roomId).emit('gameStarted', data);
+	});
+
+	socket.on('getDetails', async (roomId) => {
+		const roomDetails = await room
+			.findOne({ roomId })
+			.populate('participants', 'username image name isGuest win')
+			.populate('creator', 'username image name isGuest win');
+
+		const updatedDetails = {
+			...roomDetails._doc,
+			isGameStart: true,
+			board: Array(9).fill(''),
+			turn: 'x',
+		};
+		io.emit('getDetails', updatedDetails);
+	});
+
+	socket.on('makemove', (data) => {
+		console.log(data, 'data');
+		io.emit('makemove', data);
+	});
 });
 
 const VERSION = `/api/${process.env.VERSION}`;
