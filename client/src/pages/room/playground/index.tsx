@@ -15,13 +15,13 @@ const Playground: React.FC = () => {
 	const [board, setBoard] = useState<string[]>(Array(9).fill(''));
 	const [turn, setTurn] = useState<string>('x');
 
-	console.log(board, turn , 'board and turn')
-
-	const creator = roomDetails?.participants?.find((c) => c._id === roomDetails?.creator._id);
-	const otherPlayer = roomDetails?.participants?.find((c) => c._id !== roomDetails.creator._id);
+	const creator = roomDetails?.participants?.find((c) => c?._id === roomDetails?.creator._id);
+	const otherPlayer = roomDetails?.participants?.find((c) => c?._id !== roomDetails.creator._id);
 
 	const creatorData = creator ? { ...creator, mark: 'x' } : null;
 	const otherPlayerData = otherPlayer ? { ...otherPlayer, mark: 'o' } : null;
+
+
 
 	useEffect(() => {
 		socket.emit('getDetails', parseInt(id));
@@ -39,31 +39,23 @@ const Playground: React.FC = () => {
 		};
 	}, [id, dispatch]);
 
-	useEffect(() => {
-    socket.on('makemove', (data) => {
-			console.log(data, 'makemove data')
-      setBoard(data.board);
-      setTurn(data.turn);
-      dispatch(setRoomDetails(data));
-    });
+	useEffect(()=>{
+		const obj = {
+			roomId: parseInt(id),
+			board: board,
+			turn: turn,
+			isGameStart: true,
+			creator: creatorData,
+			participants: [creatorData, otherPlayerData],
+		};
+		creatorData && otherPlayerData && socket.emit('makemove', obj);
 
-    // Clean up the socket event listener on unmount
-    return () => {
-      socket.off('makemove');
-    };
-  }, [dispatch]);
+		return () =>{
+			socket.off("makemove")
+		}
+	}, [board, turn, id])
 
-	const makemove = useCallback(() => {
-    const obj = {
-      roomId: parseInt(id),
-      board,
-      turn,
-      isGameStart: true,
-      creator: creatorData,
-      participants: [creatorData, otherPlayerData],
-    };
-    socket.emit('makemove', obj);
-  }, [id, board, turn]);
+	
 	return (
 		<main className="mt-20 w-[900px] mx-auto">
 			<section className="flex justify-between gap-12">
@@ -84,7 +76,6 @@ const Playground: React.FC = () => {
 						setTurn={setTurn}
 						board={board}
 						setBoard={setBoard}
-						makemove={makemove}
 						type="player"
 						player={[creatorData, otherPlayerData]}
 					/>

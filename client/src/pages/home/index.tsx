@@ -6,8 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import CreateUser from './create';
 import Modal from '@/components/modal';
 import { profileSelector } from '../profile/redux/selector';
-import { setMode, setRoomCode, setRoomDetails, setRound } from '../room/redux/roomSlice';
-import { socket } from '@/socket';
+import { setMode, setRound } from '../room/redux/roomSlice';
 
 const Homepage: React.FC = () => {
 	const navigate = useNavigate();
@@ -55,7 +54,7 @@ const Homepage: React.FC = () => {
 	}
 	const modalProps = {
 		title: 'Who are you?',
-		body: <CreateUser />,
+		body: <CreateUser setModal={setShowModal} />,
 		showModal: showModal,
 	};
 	return (

@@ -28,10 +28,9 @@ interface BoardProps {
   setBoard: Dispatch<SetStateAction<string[]>>
   turn: string;
   setTurn: Dispatch<SetStateAction<string>>
-  makemove: () => void;
 }
 
-const Board: React.FC<BoardProps> = ({ type = 'player', player, random = false, board, setBoard, turn, setTurn, makemove }) => {
+const Board: React.FC<BoardProps> = ({ type = 'player', player, random = false, board, setBoard, turn, setTurn }) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [randomTurn, setRandomTurn] = useLocalStorage('game', { random: random });
@@ -106,7 +105,6 @@ const Board: React.FC<BoardProps> = ({ type = 'player', player, random = false, 
         setCurrentPlayer(player.find((p) => p.mark === nextTurn) || player[0]);
       }
       checkDraw(newData);
-      makemove()
 
     }
   };

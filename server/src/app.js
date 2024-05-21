@@ -72,7 +72,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('makemove', (data) => {
-		console.log(data, 'data');
+		console.log(data, 'data', data.roomId, 'roomid');
 		io.emit('makemove', data);
 	});
 });

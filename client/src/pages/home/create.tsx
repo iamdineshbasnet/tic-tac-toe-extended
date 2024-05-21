@@ -1,26 +1,45 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { Dispatch, SetStateAction } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Form, Formik } from 'formik';
 import { useAppDispatch } from '@/utils/hooks/appHooks';
 import { createGuest } from '../auth/redux/thunk';
+import { getPlayer } from '../profile/redux/thunk';
+import { socket } from '@/socket';
+import { setRoomDetails } from '../room/redux/roomSlice';
+import { joinRoom } from '../room/redux/thunk';
 
-const CreateUser: React.FC = () => {
+interface CreateUserProps {
+	setModal: Dispatch<SetStateAction<boolean>>;
+}
+const CreateUser: React.FC<CreateUserProps> = ({ setModal }) => {
 	const dispatch = useAppDispatch();
 	const initialState = {
 		name: '',
 	};
 
 	const navigate = useNavigate();
-
+	const { pathname } = useLocation();
+	const roomId = pathname.split('/waiting-room/')[1];
 	const handleSubmit = (values: { name: string }) => {
 		dispatch(createGuest(values))
 			.unwrap()
 			.then((res) => {
-
-				res?.accessToken && navigate('/joining-room');
-				
+				if (pathname.includes('/waiting-room/')) {
+					dispatch(joinRoom(roomId))
+						.unwrap()
+						.then((res) => {
+							if (res?.result?.roomId) {
+								socket.emit('join', res?.result?.roomId);
+								socket.on('join', res?.result?.roomId);
+							}
+						});
+				} else {
+					res?.accessToken && navigate('/joining-room');
+				}
+				dispatch(getPlayer());
+				setModal(false);
 			})
 			.catch((error) => {
 				console.log(error, 'error');

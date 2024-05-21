@@ -6,6 +6,9 @@ import envCompatible from 'vite-plugin-env-compatible'
 
 export default defineConfig({
 	envPrefix: 'REACT_',
+	server: {
+    host: '0.0.0.0'
+  },
 	plugins: [
 		react(),
 		envCompatible(),
