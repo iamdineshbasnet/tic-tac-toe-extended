@@ -5,22 +5,50 @@ const Schema = mongoose.Schema;
 const Room = new Schema({
 	participants: [
 		{
-			type: Schema.Types.ObjectId,
-			ref: 'Player',
+			player: {
+				type: Schema.Types.ObjectId,
+				ref: 'Player',
+			},
+			mark: {
+				type: String,
+				enum: ['x', 'o'],
+				require: true,
+			},
 		},
-		
 	],
 	creator: {
 		type: Schema.Types.ObjectId,
 		ref: 'Player',
+		require: true,
+	},
+	isPlaying: {
+		type: Boolean,
+		default: false,
 	},
 	roomId: {
 		type: Number,
 	},
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  }
+	board: {
+		type: Array,
+		default: [],
+	},
+	history: {
+		type: Array,
+		default: [],
+	},
+	turn: {
+		type: String,
+		enum: ['x', 'o'],
+		default: 'x',
+	},
+	disabledCell: {
+		type: Number,
+		default: -1
+	},
+	createdAt: {
+		type: Date,
+		default: Date.now,
+	},
 });
 
 module.exports = mongoose.model('Room', Room);

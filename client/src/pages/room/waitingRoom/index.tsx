@@ -31,11 +31,11 @@ const WaitingRoom: React.FC = () => {
 		id && dispatch(getRoomDetails(id));
 	}, [id]);
 
-	const creator = roomDetails?.participants?.find((c) => c._id === roomDetails?.creator._id);
-	const otherPlayer = roomDetails?.participants?.find((c) => c._id !== roomDetails.creator._id);
 
-	const creatorData = creator ? { ...creator, mark: 'x' } : null;
-	const otherPlayerData = otherPlayer ? { ...otherPlayer, mark: 'o' } : null;
+	const creator = roomDetails?.participants?.find((c) => c.username === roomDetails?.creator.username);
+	const otherPlayer = roomDetails?.participants?.find((c) => c.username !== roomDetails?.creator.username);
+
+	console.log(roomDetails, 'roomdetails')
 	useEffect(() => {
 		socket.on('join', (data) => {
 			dispatch(setRoomDetails(data));
@@ -52,9 +52,9 @@ const WaitingRoom: React.FC = () => {
 			roomId: parseInt(id),
 			board: Array(9).fill(''),
 			turn: 'x',
-			isGameStart: true,
-			creator: creatorData,
-			participants: [creatorData, otherPlayerData],
+			isPlaying: true,
+			creator: roomDetails?.creator,
+			participants: roomDetails?.participants,
 		};
 		socket.emit('startGame', obj);
 		navigate(`/playground/${id}`);
@@ -159,13 +159,13 @@ const WaitingRoom: React.FC = () => {
 
 					<section className="flex justify-between gap-20 max-w-[600px] mx-auto mt-20">
 						<div className="w-full">
-							{creatorData && <UserCard data={creatorData} />}
+							{creator && <UserCard data={creator} />}
 						</div>
 						<div className="w-full">
-							{otherPlayerData && <UserCard data={otherPlayerData} />}
+							{otherPlayer && <UserCard data={otherPlayer} />}
 						</div>
 					</section>
-					{creatorData?.username === player?.username && roomDetails?.participants && (
+					{creator?.username === player?.username && roomDetails?.participants && (
 						<Button
 							className="w-full font-semibold text-lg mt-20"
 							onClick={startGame}

@@ -9,7 +9,6 @@ const connectDB = require('./config/db');
 const Auth = require('./routes/auth');
 const Player = require('./routes/player');
 const Room = require('./routes/room');
-const { generateRoomId } = require('./config/generateRandom');
 const room = require('./model/room');
 
 // express app
@@ -42,11 +41,17 @@ const io = socketIO(server, {
 io.on('connection', (socket) => {
 	socket.on('join', async (roomId) => {
 		socket.join(roomId);
-		const roomDetails = await room
+		let roomDetails = await room
 			.findOne({ roomId })
-			.populate('participants', 'username image name isGuest win')
-			.populate('creator', 'username image name isGuest win');
+			.populate('participants.player', 'username image isGuest name win')
+			.populate('creator', 'username image isGuest name win')
+			.lean();
 		if (roomDetails && roomDetails.participants.length <= 2) {
+			roomDetails.participants = roomDetails.participants.map((participant) => ({
+				...participant.player,
+				mark: participant.mark,
+				_id: participant._id,
+			}));
 			io.to(roomId).emit('join', roomDetails);
 		}
 	});
@@ -57,23 +62,44 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('getDetails', async (roomId) => {
-		const roomDetails = await room
+		let roomDetails = await room
 			.findOne({ roomId })
-			.populate('participants', 'username image name isGuest win')
-			.populate('creator', 'username image name isGuest win');
+			.populate('participants.player', 'username image isGuest name win')
+			.populate('creator', 'username image isGuest name win')
+			.lean();
+		roomDetails.participants = roomDetails.participants.map((participant) => ({
+			...participant.player,
+			mark: participant.mark,
+			_id: participant._id,
+		}));
 
-		const updatedDetails = {
-			...roomDetails._doc,
-			isGameStart: true,
-			board: Array(9).fill(''),
-			turn: 'x',
-		};
-		io.emit('getDetails', updatedDetails);
+		io.emit('getDetails', roomDetails);
 	});
 
-	socket.on('makemove', (data) => {
-		console.log(data, 'data', data.roomId, 'roomid');
-		io.emit('makemove', data);
+	socket.on('makemove', async (data) => {
+		try {
+			const updateData = {
+				board: data.board,
+				turn: data.turn,
+				history: data.history,
+			};
+
+			if (typeof data.disabledCell !== 'undefined') {
+				updateData.disabledCell = data.disabledCell;
+			} else {
+				updateData.disabledCell = -1
+			}
+			console.log('updateddata', updateData)
+			const roomDetails = await room.findOneAndUpdate(
+				{ roomId: data.roomId },
+				updateData,
+				{ new: true }
+			);
+
+			io.emit('makemove', roomDetails);
+		} catch (error) {
+			console.error('Error updating room:', error);
+		}
 	});
 });
 

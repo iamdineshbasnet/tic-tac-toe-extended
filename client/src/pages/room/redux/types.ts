@@ -14,7 +14,9 @@ export interface RoomDetailsProps{
   participants: PlayerProps[]
   turn?: string;
   board: string[]
-  creator: PlayerProps 
+  creator: PlayerProps ;
+  disabledCell: number;
+  history: number[];
 }
 export interface RoomProps{
   round: number;
