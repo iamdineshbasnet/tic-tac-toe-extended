@@ -66,7 +66,7 @@ const Board: React.FC<BoardProps> = ({
 	const [showDialog, setShowDialog] = useState(false);
 
 	const [currentPlayer, setCurrentPlayer] = useState<string>('');
-
+	const [playAgainMessage, setPlayAgainMessage] = useState<string>('');
 	const { round } = useAppSelector(roomSelector);
 	const { pathname } = useLocation();
 
@@ -115,7 +115,7 @@ const Board: React.FC<BoardProps> = ({
 		}
 	}, [board]);
 
-	// Function to draw
+	// Function to draw 'x' and 'o'
 	const draw = (index: number) => {
 		if (!isActive) return;
 		const winner = checkWinner(board);
@@ -149,9 +149,10 @@ const Board: React.FC<BoardProps> = ({
 					makemove(nextTurn, newData, updatedHistory, newDisabledCell);
 				}
 			} else {
-				makemove(nextTurn, newData, newHistory);
+				setDisabledCell(-1);
 			}
 
+			makemove(nextTurn, newData, newHistory, disabledCell);
 			const nextWinner = checkWinner(newData);
 
 			if (nextWinner === null) {
@@ -189,6 +190,14 @@ const Board: React.FC<BoardProps> = ({
 		return null;
 	};
 
+	const handlewinGame = (winner: PlayerProps, loser: PlayerProps) => {
+		socket.emit('gameWin', { roomId: parseInt(id), winner: winner.username, loser: loser.username });
+	};
+	// Listen for the gameWin event to update UI
+	socket.on('gameWin', (data) => {
+		console.log(data, 'gameWin data');
+	});
+
 	// Check if the match is a draw
 	const checkDraw = (board: string[]) => {
 		const isBoardFull = board.every((symbol) => symbol !== '' && checkWinner(board) === null);
@@ -207,27 +216,58 @@ const Board: React.FC<BoardProps> = ({
 		setShowDialog(false);
 	};
 
-	const playAgain = () => {
-		resetBoard();
-		let nextTurn = turn === 'x' ? 'o' : 'x';
+	// const playAgain = () => {
+	// 	resetBoard();
+	// 	let nextTurn = turn === 'x' ? 'o' : 'x';
 
-		if (randomTurn) {
-			nextTurn = Math.random() < 0.5 ? 'x' : 'o';
-			setTurn(nextTurn);
-		} else {
-			setTurn(nextTurn);
-		}
-		dispatch(setRound(round + 1));
+	// 	if (randomTurn) {
+	// 		nextTurn = Math.random() < 0.5 ? 'x' : 'o';
+	// 		setTurn(nextTurn);
+	// 	} else {
+	// 		setTurn(nextTurn);
+	// 	}
+	// 	dispatch(setRound(round + 1));
+	// };
+
+	const playAgain = () => {
+		// resetBoard();
+		// dispatch(setRound(round + 1));
+		// socket.emit('playAgain', { roomId: id, round: round})
+		socket.emit('playAgainRequest', {
+			roomId: parseInt(id),
+			username: player?.username,
+			name: player?.name,
+		});
 	};
+
+	socket.on('playAgainRequested', (data) => {
+		if (data.username !== player?.username) {
+			setPlayAgainMessage(`${data.name} wants to play again`);
+		} else {
+			setPlayAgainMessage('');
+		}
+	});
+
+	// socket.on('playAgain', (data)=>{
+	// 	setBoard(data.board);
+	// 	setTurn(data.turn);
+	// 	setRoomDetails(data);
+	// 	setHistory(data.history);
+	// 	setDisabledCell(data.disabledCell);
+	// 	dispatch(setRound(data.round))
+	// })
 
 	// Get messages after the match completes either draw or wins
 	const getWinnerMessage = (winner: string | null) => {
 		if (winner === null && isDraw) {
 			return 'Draw';
 		} else if (winner !== null) {
-			const win_by = players.find((p) => p.mark === winner);
+			const win_by = players?.find((p) => p.mark === winner);
+			const lose_by = players?.find((p) => p.mark !== winner);
+			win_by && lose_by && handlewinGame(win_by, lose_by);
 			return `${win_by?.name} Won`;
 		}
+
 		return '';
 	};
 
@@ -302,7 +342,9 @@ const Board: React.FC<BoardProps> = ({
 									{getWinnerMessage(checkWinner(board))}
 								</AlertDialogTitle>
 							</AlertDialogHeader>
-							<AlertDialogDescription>
+							<AlertDialogDescription className="text-center my-6 text-xl">
+								{playAgainMessage !== '' && playAgainMessage}
+								{/* 
 								<div className="flex items-center space-x-2 my-6 justify-center">
 									<Switch
 										id="random-turn"
@@ -311,6 +353,7 @@ const Board: React.FC<BoardProps> = ({
 									/>
 									<Label htmlFor="random-turn">Random Turn</Label>
 								</div>
+							*/}
 							</AlertDialogDescription>
 							<AlertDialogFooter>
 								<AlertDialogCancel onClick={leaveGame} autoFocus={false}>

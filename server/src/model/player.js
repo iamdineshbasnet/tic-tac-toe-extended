@@ -40,7 +40,11 @@ const Player = new Schema({
   win: {
     type: Number,
     default: 0
-  }
+  },
+  lose: {
+    type: Number,
+    default: 0
+  },
 })
 
 module.exports = mongoose.model("Player", Player)

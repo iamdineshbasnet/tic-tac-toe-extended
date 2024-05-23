@@ -41,6 +41,10 @@ const Room = new Schema({
 		enum: ['x', 'o'],
 		default: 'x',
 	},
+	round: {
+		type: Number,
+		default: 1,
+	},
 	disabledCell: {
 		type: Number,
 		default: -1

@@ -10,7 +10,7 @@ import { profileSelector } from '@/pages/profile/redux/selector';
 
 const Playground: React.FC = () => {
 	const dispatch = useAppDispatch();
-	const { roomDetails } = useAppSelector(roomSelector);
+	const { roomDetails, round } = useAppSelector(roomSelector);
 	const { player } = useAppSelector(profileSelector);
 
 	
@@ -50,13 +50,13 @@ const Playground: React.FC = () => {
 		<main className="mt-20 w-[900px] mx-auto">
 			<section className="flex justify-between gap-12">
 				{creator && <UserCard data={creator} />}
-				{/* <div className="w-[80px] h-[80px] aspect-square border rounded-full flex items-center flex-col justify-center">
+				<div className="w-[80px] h-[80px] aspect-square border rounded-full flex items-center flex-col justify-center">
 					<p className="text-center text-sm">
 						{round}
 						<sup>st</sup>
 					</p>
 					<h5 className="text-center text-sm">Round</h5>
-				</div> */}
+				</div>
 				{otherPlayer && <UserCard data={otherPlayer} />}
 			</section>
 			<section className="flex items-center justify-center mt-24">
