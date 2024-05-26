@@ -13,17 +13,21 @@ const Playground: React.FC = () => {
 	const { roomDetails, round } = useAppSelector(roomSelector);
 	const { player } = useAppSelector(profileSelector);
 
-	
 	const { pathname } = useLocation();
 	const id = pathname.split('/playground/')[1];
 	const [board, setBoard] = useState<string[]>(Array(9).fill(''));
 	const [history, setHistory] = useState<number[]>([]);
 	const [turn, setTurn] = useState<string>('x');
+	const [isPlaying, setIsPlaying] = useState<boolean>(false);
 	// State to track disabled cells
 	const [disabledCell, setDisabledCell] = useState<number>(-1);
-	
-	const creator = roomDetails?.participants?.find((c) => c?.username === roomDetails?.creator.username);
-	const otherPlayer = roomDetails?.participants?.find((c) => c?.username !== roomDetails.creator.username);
+
+	const creator = roomDetails?.participants?.find(
+		(c) => c?.username === roomDetails?.creator.username
+	);
+	const otherPlayer = roomDetails?.participants?.find(
+		(c) => c?.username !== roomDetails.creator.username
+	);
 
 	const filteredPlayer = roomDetails?.participants?.find((p) => p?.username === player?.username);
 	const isActive = filteredPlayer?.mark === turn;
@@ -36,7 +40,8 @@ const Playground: React.FC = () => {
 				setTurn(data.turn);
 			}
 			setBoard(data?.board);
-			setHistory(data?.history)
+			setHistory(data?.history);
+			setIsPlaying(data?.isPlaying);
 		});
 
 		// Clean up the socket event listener on unmount
@@ -44,7 +49,6 @@ const Playground: React.FC = () => {
 			socket.off('getDetails');
 		};
 	}, [id, dispatch]);
-
 
 	return (
 		<main className="mt-20 w-[900px] mx-auto">
@@ -63,6 +67,8 @@ const Playground: React.FC = () => {
 				{roomDetails && (
 					<Board
 						isActive={isActive}
+						isPlaying={isPlaying}
+						setIsPlaying={setIsPlaying}
 						turn={turn}
 						setTurn={setTurn}
 						board={board}

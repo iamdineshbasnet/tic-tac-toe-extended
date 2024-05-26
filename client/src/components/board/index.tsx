@@ -27,6 +27,8 @@ interface BoardProps {
 	players: PlayerProps[];
 	random?: boolean;
 	board: string[];
+	isPlaying: boolean;
+	setIsPlaying: Dispatch<SetStateAction<boolean>>;
 	setBoard: Dispatch<SetStateAction<string[]>>;
 	history: number[];
 	setHistory: Dispatch<SetStateAction<number[]>>;
@@ -42,6 +44,8 @@ const Board: React.FC<BoardProps> = ({
 	players,
 	random = false,
 	board,
+	isPlaying,
+	setIsPlaying,
 	setBoard,
 	history,
 	setHistory,
@@ -73,7 +77,7 @@ const Board: React.FC<BoardProps> = ({
 	const id = pathname.split('/playground/')[1];
 
 	useEffect(() => {
-		if (!turn) return;
+		if (!(turn && isPlaying)) return;
 		const filterPlayer = roomDetails?.participants?.find(
 			(p) => p.username === player?.username
 		);
@@ -102,7 +106,6 @@ const Board: React.FC<BoardProps> = ({
 		setRoomDetails(data);
 		setHistory(data.history);
 		setDisabledCell(data.disabledCell);
-		console.log(data, 'data');
 	});
 
 	// useEffect to handle game end conditions
@@ -191,11 +194,15 @@ const Board: React.FC<BoardProps> = ({
 	};
 
 	const handlewinGame = (winner: PlayerProps, loser: PlayerProps) => {
-		socket.emit('gameWin', { roomId: parseInt(id), winner: winner.username, loser: loser.username });
+		socket.emit('gameWin', {
+			roomId: parseInt(id),
+			winner: winner.username,
+			loser: loser.username,
+		});
 	};
 	// Listen for the gameWin event to update UI
 	socket.on('gameWin', (data) => {
-		console.log(data, 'gameWin data');
+		// console.log(data, 'gameWin data');
 	});
 
 	// Check if the match is a draw
@@ -216,23 +223,7 @@ const Board: React.FC<BoardProps> = ({
 		setShowDialog(false);
 	};
 
-	// const playAgain = () => {
-	// 	resetBoard();
-	// 	let nextTurn = turn === 'x' ? 'o' : 'x';
-
-	// 	if (randomTurn) {
-	// 		nextTurn = Math.random() < 0.5 ? 'x' : 'o';
-	// 		setTurn(nextTurn);
-	// 	} else {
-	// 		setTurn(nextTurn);
-	// 	}
-	// 	dispatch(setRound(round + 1));
-	// };
-
 	const playAgain = () => {
-		// resetBoard();
-		// dispatch(setRound(round + 1));
-		// socket.emit('playAgain', { roomId: id, round: round})
 		socket.emit('playAgainRequest', {
 			roomId: parseInt(id),
 			username: player?.username,
@@ -240,22 +231,34 @@ const Board: React.FC<BoardProps> = ({
 		});
 	};
 
-	socket.on('playAgainRequested', (data) => {
-		if (data.username !== player?.username) {
-			setPlayAgainMessage(`${data.name} wants to play again`);
-		} else {
-			setPlayAgainMessage('');
-		}
-	});
+	useEffect(() => {
+		socket.on('playAgainRequested', (data) => {
+				console.log(data, 'data of play again requested');
+				if (data.username !== player?.username) {
+						setPlayAgainMessage(`${data.name} wants to play again`);
+				} else {
+						setPlayAgainMessage('');
+				}
+		});
 
-	// socket.on('playAgain', (data)=>{
-	// 	setBoard(data.board);
-	// 	setTurn(data.turn);
-	// 	setRoomDetails(data);
-	// 	setHistory(data.history);
-	// 	setDisabledCell(data.disabledCell);
-	// 	dispatch(setRound(data.round))
-	// })
+		socket.on('playAgainRequestsUpdate', (data) => {
+			console.log(data, 'play again reqquests updates')
+				if (data.length >= 2) {
+						resetBoard();
+						socket.emit('playAgain', { roomId: parseInt(id), round: 2 });
+				}
+		});
+
+		socket.on('playAgain', (data) => {
+				console.log(data, 'play again data in client side');
+		});
+
+		return () => {
+				socket.off('playAgainRequested');
+				socket.off('playAgainRequestsUpdate');
+				socket.off('playAgain');
+		};
+}, [player, id, resetBoard]);
 
 	// Get messages after the match completes either draw or wins
 	const getWinnerMessage = (winner: string | null) => {

@@ -35,7 +35,6 @@ const WaitingRoom: React.FC = () => {
 	const creator = roomDetails?.participants?.find((c) => c.username === roomDetails?.creator.username);
 	const otherPlayer = roomDetails?.participants?.find((c) => c.username !== roomDetails?.creator.username);
 
-	console.log(roomDetails, 'roomdetails')
 	useEffect(() => {
 		socket.on('join', (data) => {
 			dispatch(setRoomDetails(data));
@@ -50,11 +49,7 @@ const WaitingRoom: React.FC = () => {
 	const startGame = () => {
 		const obj = {
 			roomId: parseInt(id),
-			board: Array(9).fill(''),
-			turn: 'x',
 			isPlaying: true,
-			creator: roomDetails?.creator,
-			participants: roomDetails?.participants,
 		};
 		socket.emit('startGame', obj);
 		navigate(`/playground/${id}`);

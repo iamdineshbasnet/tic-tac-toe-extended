@@ -39,6 +39,9 @@ const io = socketIO(server, {
 	},
 });
 
+// Store play-again requests
+let playAgainRequests = {};
+
 io.on('connection', (socket) => {
 	socket.on('join', async (roomId) => {
 		socket.join(roomId);
@@ -57,9 +60,29 @@ io.on('connection', (socket) => {
 		}
 	});
 
-	socket.on('startGame', (data) => {
-		// console.log(data, 'data')
-		io.to(data.roomId).emit('gameStarted', data);
+	socket.on('startGame', async (data) => {
+		try {
+			const updateData = {
+				isPlaying: data.isPlaying,
+			};
+			let roomDetails = await room
+				.findOneAndUpdate({ roomId: data.roomId }, updateData, { new: true })
+				.populate('participants.player', 'username image isGuest name win')
+				.populate('creator', 'username image isGuest name win')
+				.lean();
+
+			if (roomDetails && roomDetails.participants.length <= 2) {
+				roomDetails.participants = roomDetails.participants.map((participant) => ({
+					...participant.player,
+					mark: participant.mark,
+					_id: participant._id,
+				}));
+			}
+
+			io.to(data.roomId).emit('gameStarted', roomDetails);
+		} catch (error) {
+			console.log('Error in game start', error);
+		}
 	});
 
 	socket.on('getDetails', async (roomId) => {
@@ -88,13 +111,11 @@ io.on('connection', (socket) => {
 			if (typeof data.disabledCell !== 'undefined') {
 				updateData.disabledCell = data.disabledCell;
 			} else {
-				updateData.disabledCell = -1
+				updateData.disabledCell = -1;
 			}
-			const roomDetails = await room.findOneAndUpdate(
-				{ roomId: data.roomId },
-				updateData,
-				{ new: true }
-			);
+			const roomDetails = await room.findOneAndUpdate({ roomId: data.roomId }, updateData, {
+				new: true,
+			});
 
 			io.emit('makemove', roomDetails);
 		} catch (error) {
@@ -102,73 +123,90 @@ io.on('connection', (socket) => {
 		}
 	});
 
-	socket.on('gameWin', async(data) =>{
+	socket.on('gameWin', async (data) => {
 		try {
-			const { roomId, winner, loser } = data;	
-			 await room.findOneAndUpdate({ roomId }, { isPlaying: false });
+			const { roomId, winner, loser } = data;
+			await room.findOneAndUpdate({ roomId }, { isPlaying: false });
 
-			  // Update player win/lose records
-				await player.updateOne({ username: winner }, { $inc: { win: 1 } });
-				await player.updateOne({ username: loser }, { $inc: { lose: 1 } });
+			// Update player win/lose records
+			await player.updateOne({ username: winner }, { $inc: { win: 1 } });
+			await player.updateOne({ username: loser }, { $inc: { lose: 1 } });
 
-				let updatedRoomDetails = await room
-        .findOne({ roomId })
-        .populate('participants.player', 'username image isGuest name win')
-        .populate('creator', 'username image isGuest name win')
-        .lean();
-      
-      updatedRoomDetails.participants = updatedRoomDetails.participants.map((participant) => ({
-        ...participant.player,
-        mark: participant.mark,
-        _id: participant._id,
-      }));
+			let updatedRoomDetails = await room
+				.findOne({ roomId })
+				.populate('participants.player', 'username image isGuest name win')
+				.populate('creator', 'username image isGuest name win')
+				.lean();
 
-				const updatedWinner = await player.findOne({ username: winner });
-				const updatedLoser = await player.findOne({ username: loser });
-
-				socket.to(roomId).emit('gameWin', {
-					roomDetails: updatedRoomDetails,
-					winner: updatedWinner,
-					loser: updatedLoser
+			updatedRoomDetails.participants = updatedRoomDetails.participants.map(
+				(participant) => ({
+					...participant.player,
+					mark: participant.mark,
+					_id: participant._id,
 				})
-				
+			);
+
+			const updatedWinner = await player.findOne({ username: winner });
+			const updatedLoser = await player.findOne({ username: loser });
+
+			socket.to(roomId).emit('gameWin', {
+				roomDetails: updatedRoomDetails,
+				winner: updatedWinner,
+				loser: updatedLoser,
+			});
 		} catch (error) {
-			console.log('Error handling gameWin', error)
+			console.log('Error handling gameWin', error);
 		}
-	})
-
-	socket.on('playAgainRequest', (data) => {
-    try {
-      socket.to(data.roomId).emit('playAgainRequested', { username: data.username, name: data.name });
-    } catch (error) {
-      console.log('Error notifying play again request', error);
-    }
-  });
-
-
-	socket.on('playAgain', async(data)=>{
+	});
+	socket.on('playAgainRequest', async (data) => {
 		try {
-			console.log(data, 'data')
+			const { roomId, username, name } = data;
+
+			if (!playAgainRequests[roomId]) {
+				playAgainRequests[roomId] = [];
+			}
+
+			const userExists = playAgainRequests[roomId].some(
+				(request) => request.username === username
+			);
+
+			if (!userExists) {
+				playAgainRequests[roomId].push({ username, name });
+			}
+
+			socket.to(roomId).emit('playAgainRequested', { username, name });
+
+			socket.emit('playAgainRequestsUpdate', playAgainRequests[roomId]);
+
+			
+		} catch (error) {
+			console.log('Error notifying play again request', error);
+		}
+	});
+
+	socket.on('playAgain', async (data) => {
+		try {
+			console.log('play Again triggered');
 			const updateData = {
-				board: [Array(9).fill('')],
+				board: Array(9).fill(''),
 				turn: 'x',
 				history: [],
 				disabledCell: -1,
 				isPlaying: true,
-				round: data.round
-			}
-			console.log('updateddata', updateData)
-			
-			const roomDetails = await room.findOneAndUpdate({ roomId: data.roomId }, updateData, { new: true })
+				round: data.round,
+			};
+			console.log('updateddata', updateData);
 
-			console.log(roomDetails, 'roomDetails')
-			io.emit('playAgain', roomDetails)
+			const roomDetails = await room.findOneAndUpdate({ roomId: data.roomId }, updateData, {
+				new: true,
+			});
 
+			console.log(roomDetails, 'roomDetails');
+			io.emit('playAgain', roomDetails);
 		} catch (error) {
-			console.log('Error play again', error)
-			
+			console.log('Error play again', error);
 		}
-	})
+	});
 });
 
 const VERSION = `/api/${process.env.VERSION}`;
