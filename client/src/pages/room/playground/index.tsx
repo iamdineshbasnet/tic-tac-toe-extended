@@ -10,15 +10,19 @@ import { profileSelector } from '@/pages/profile/redux/selector';
 
 const Playground: React.FC = () => {
 	const dispatch = useAppDispatch();
-	const { roomDetails, round } = useAppSelector(roomSelector);
+	const { roomDetails } = useAppSelector(roomSelector);
 	const { player } = useAppSelector(profileSelector);
 
 	const { pathname } = useLocation();
 	const id = pathname.split('/playground/')[1];
+
 	const [board, setBoard] = useState<string[]>(Array(9).fill(''));
 	const [history, setHistory] = useState<number[]>([]);
 	const [turn, setTurn] = useState<string>('x');
 	const [isPlaying, setIsPlaying] = useState<boolean>(false);
+	const [playAgainMessage, setPlayAgainMessage] = useState<string>('');
+	const [playAgainRequests, setPlayAgainRequests] = useState<string[] | any>([]);
+	const [round, setRound] = useState<number>(1)
 	// State to track disabled cells
 	const [disabledCell, setDisabledCell] = useState<number>(-1);
 
@@ -36,12 +40,11 @@ const Playground: React.FC = () => {
 		socket.emit('getDetails', parseInt(id));
 		socket.on('getDetails', (data) => {
 			dispatch(setRoomDetails(data));
-			if (data.turn) {
-				setTurn(data.turn);
-			}
+			setTurn(data.turn);
 			setBoard(data?.board);
 			setHistory(data?.history);
 			setIsPlaying(data?.isPlaying);
+			setRound(data.round)
 		});
 
 		// Clean up the socket event listener on unmount
@@ -66,27 +69,28 @@ const Playground: React.FC = () => {
 			<section className="flex items-center justify-center mt-24">
 				{roomDetails && (
 					<Board
-						isActive={isActive}
-						isPlaying={isPlaying}
-						setIsPlaying={setIsPlaying}
-						turn={turn}
-						setTurn={setTurn}
-						board={board}
-						setBoard={setBoard}
-						history={history}
-						setHistory={setHistory}
-						disabledCell={disabledCell}
-						setDisabledCell={setDisabledCell}
 						type="player"
 						players={roomDetails?.participants}
+						isActive={isActive}
+						turn={turn}
+						isPlaying={isPlaying}
+						board={board}
+						history={history}
+						disabledCell={disabledCell}
+						round={round}
+						playAgainMessage={playAgainMessage}
+						playAgainRequests={playAgainRequests}
+						setIsPlaying={setIsPlaying}
+						setTurn={setTurn}
+						setBoard={setBoard}
+						setHistory={setHistory}
+						setDisabledCell={setDisabledCell}
+						setRound={setRound}
+						setPlayAgainMessage={setPlayAgainMessage}
+						setPlayAgainRequests={setPlayAgainRequests}
 					/>
 				)}
-				{/* {mode === 'pvp' ? (
-				'pvp'
-			) : (
-				<Board type="bot" player={player} />
-				'bot'
-			)} */}
+				
 			</section>
 		</main>
 	);

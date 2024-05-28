@@ -13,9 +13,7 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/utils/hooks/appHooks';
 import { PlayerProps } from '@/pages/room/redux/types';
-import { Switch } from '../ui/switch';
 import useLocalStorage from 'use-local-storage';
-import { Label } from '../ui/label';
 import { roomSelector } from '@/pages/room/redux/selector';
 import { setRoomDetails, setRound } from '@/pages/room/redux/roomSlice';
 import { socket } from '@/socket';
@@ -26,34 +24,46 @@ interface BoardProps {
 	choice?: 'x' | 'o';
 	players: PlayerProps[];
 	random?: boolean;
-	board: string[];
+	isActive?: boolean;
+	turn: string;
 	isPlaying: boolean;
+	board: string[];
+	history: number[];
+	disabledCell: number;
+	round: number;
+	playAgainMessage: string;
+	playAgainRequests: string[] | any;
+	setTurn: Dispatch<SetStateAction<string>>;
 	setIsPlaying: Dispatch<SetStateAction<boolean>>;
 	setBoard: Dispatch<SetStateAction<string[]>>;
-	history: number[];
 	setHistory: Dispatch<SetStateAction<number[]>>;
-	turn: string;
-	setTurn: Dispatch<SetStateAction<string>>;
-	disabledCell: number;
 	setDisabledCell: Dispatch<SetStateAction<number>>;
-	isActive?: boolean;
+	setRound: Dispatch<SetStateAction<number>>;
+	setPlayAgainMessage: Dispatch<SetStateAction<string>>;
+	setPlayAgainRequests: Dispatch<SetStateAction<string[] | any>>;
 }
 
 const Board: React.FC<BoardProps> = ({
 	type = 'player',
 	players,
 	random = false,
-	board,
+	isActive,
+	turn,
 	isPlaying,
+	board,
+	history,
+	disabledCell,
+	round,
+	playAgainMessage,
+	playAgainRequests,
 	setIsPlaying,
 	setBoard,
-	history,
 	setHistory,
-	turn,
 	setTurn,
-	isActive,
-	disabledCell,
 	setDisabledCell,
+	setRound,
+	setPlayAgainMessage,
+	setPlayAgainRequests,
 }) => {
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
@@ -70,20 +80,18 @@ const Board: React.FC<BoardProps> = ({
 	const [showDialog, setShowDialog] = useState(false);
 
 	const [currentPlayer, setCurrentPlayer] = useState<string>('');
-	const [playAgainMessage, setPlayAgainMessage] = useState<string>('');
-	const { round } = useAppSelector(roomSelector);
+
 	const { pathname } = useLocation();
 
 	const id = pathname.split('/playground/')[1];
 
 	useEffect(() => {
-		if (!(turn && isPlaying)) return;
 		const filterPlayer = roomDetails?.participants?.find(
 			(p) => p.username === player?.username
 		);
 
 		filterPlayer?.mark === turn ? setCurrentPlayer('Your') : setCurrentPlayer('Opponent');
-	}, [turn]);
+	}, [turn, id]);
 
 	const makemove = (turn: string, board: string[], history: number[], disabledCell?: number) => {
 		const obj: any = {
@@ -200,9 +208,10 @@ const Board: React.FC<BoardProps> = ({
 			loser: loser.username,
 		});
 	};
+
 	// Listen for the gameWin event to update UI
 	socket.on('gameWin', (data) => {
-		// console.log(data, 'gameWin data');
+		setIsPlaying(data.isPlaying);
 	});
 
 	// Check if the match is a draw
@@ -214,16 +223,26 @@ const Board: React.FC<BoardProps> = ({
 	};
 
 	// Function to reset the board
-	const resetBoard = () => {
-		setBoard(['', '', '', '', '', '', '', '', '']);
+	const resetBoard = (data: any) => {
 		setIsDraw(false);
-		setHistory([]);
-		setDisabledCell(-1);
 		setWinningCombination([]);
 		setShowDialog(false);
+		setBoard(data.board);
+		setTurn(data.turn);
+		setRoomDetails(data);
+		setHistory(data.history);
+		setDisabledCell(data.disabledCell);
+		setIsPlaying(data.isPlaying);
+		setRound(data.round)
 	};
 
 	const playAgain = () => {
+		if (!playAgainRequests.includes(player?.username)) {
+			console.log('play again triggred')
+			
+			const updatedRequests = [...playAgainRequests, player?.username];
+			setPlayAgainRequests(updatedRequests);
+		}
 		socket.emit('playAgainRequest', {
 			roomId: parseInt(id),
 			username: player?.username,
@@ -231,34 +250,29 @@ const Board: React.FC<BoardProps> = ({
 		});
 	};
 
+	socket.on('playAgainRequested', (data) => {
+		console.log('play again requested', data)
+		data.forEach((p: any) => {
+			if (p.username !== player?.username) {
+				setPlayAgainMessage(`${p.name} wants to play again`);
+				if (!playAgainRequests.includes(p?.username)) {
+					const updatedRequests = [...playAgainRequests, p?.username];
+					setPlayAgainRequests(updatedRequests);
+				}
+			} 
+		});
+	});
+
 	useEffect(() => {
-		socket.on('playAgainRequested', (data) => {
-				console.log(data, 'data of play again requested');
-				if (data.username !== player?.username) {
-						setPlayAgainMessage(`${data.name} wants to play again`);
-				} else {
-						setPlayAgainMessage('');
-				}
-		});
+		if (playAgainRequests.length >= 2) {
+			socket.emit('playAgain', { roomId: id, round: round + 1 });
+		}
+	}, [playAgainRequests]);
 
-		socket.on('playAgainRequestsUpdate', (data) => {
-			console.log(data, 'play again reqquests updates')
-				if (data.length >= 2) {
-						resetBoard();
-						socket.emit('playAgain', { roomId: parseInt(id), round: 2 });
-				}
-		});
-
-		socket.on('playAgain', (data) => {
-				console.log(data, 'play again data in client side');
-		});
-
-		return () => {
-				socket.off('playAgainRequested');
-				socket.off('playAgainRequestsUpdate');
-				socket.off('playAgain');
-		};
-}, [player, id, resetBoard]);
+	socket.on('playAgain', (data) => {
+		resetBoard(data);
+		setPlayAgainMessage('');
+	});
 
 	// Get messages after the match completes either draw or wins
 	const getWinnerMessage = (winner: string | null) => {
@@ -308,16 +322,11 @@ const Board: React.FC<BoardProps> = ({
 	// Leave the game
 	const leaveGame = () => {
 		navigate('/');
-		dispatch(setRound(1));
 	};
 
 	useEffect(() => {
 		setRandomTurn({ random: random });
 	}, [random, setRandomTurn]);
-
-	const handleSwitchChange = (value: boolean) => {
-		setRandomTurn({ random: value });
-	};
 
 	return (
 		<section className="flex flex-col gap-16">
@@ -347,16 +356,6 @@ const Board: React.FC<BoardProps> = ({
 							</AlertDialogHeader>
 							<AlertDialogDescription className="text-center my-6 text-xl">
 								{playAgainMessage !== '' && playAgainMessage}
-								{/* 
-								<div className="flex items-center space-x-2 my-6 justify-center">
-									<Switch
-										id="random-turn"
-										onCheckedChange={handleSwitchChange}
-										checked={randomTurn?.random || false}
-									/>
-									<Label htmlFor="random-turn">Random Turn</Label>
-								</div>
-							*/}
 							</AlertDialogDescription>
 							<AlertDialogFooter>
 								<AlertDialogCancel onClick={leaveGame} autoFocus={false}>

@@ -174,11 +174,7 @@ io.on('connection', (socket) => {
 				playAgainRequests[roomId].push({ username, name });
 			}
 
-			socket.to(roomId).emit('playAgainRequested', { username, name });
-
-			socket.emit('playAgainRequestsUpdate', playAgainRequests[roomId]);
-
-			
+			io.emit('playAgainRequested', playAgainRequests[roomId]);
 		} catch (error) {
 			console.log('Error notifying play again request', error);
 		}
@@ -186,7 +182,6 @@ io.on('connection', (socket) => {
 
 	socket.on('playAgain', async (data) => {
 		try {
-			console.log('play Again triggered');
 			const updateData = {
 				board: Array(9).fill(''),
 				turn: 'x',
@@ -195,13 +190,11 @@ io.on('connection', (socket) => {
 				isPlaying: true,
 				round: data.round,
 			};
-			console.log('updateddata', updateData);
-
 			const roomDetails = await room.findOneAndUpdate({ roomId: data.roomId }, updateData, {
 				new: true,
 			});
 
-			console.log(roomDetails, 'roomDetails');
+			playAgainRequests[data.roomId] = [];
 			io.emit('playAgain', roomDetails);
 		} catch (error) {
 			console.log('Error play again', error);
