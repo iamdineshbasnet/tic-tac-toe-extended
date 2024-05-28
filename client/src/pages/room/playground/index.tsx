@@ -7,6 +7,7 @@ import { useLocation } from 'react-router-dom';
 import { socket } from '@/socket';
 import { setRoomDetails } from '../redux/roomSlice';
 import { profileSelector } from '@/pages/profile/redux/selector';
+import { getOrdinalSuffix } from '@/utils/functions/AppFunctions';
 
 const Playground: React.FC = () => {
 	const dispatch = useAppDispatch();
@@ -60,7 +61,7 @@ const Playground: React.FC = () => {
 				<div className="w-[80px] h-[80px] aspect-square border rounded-full flex items-center flex-col justify-center">
 					<p className="text-center text-sm">
 						{round}
-						<sup>st</sup>
+						<sup>{getOrdinalSuffix(round)}</sup>
 					</p>
 					<h5 className="text-center text-sm">Round</h5>
 				</div>

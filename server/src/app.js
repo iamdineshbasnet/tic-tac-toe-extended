@@ -108,11 +108,25 @@ io.on('connection', (socket) => {
 				history: data.history,
 			};
 
-			if (typeof data.disabledCell !== 'undefined') {
-				updateData.disabledCell = data.disabledCell;
+			const emptyCellCount = data.board.filter((cell) => cell === '').length;
+
+			if (emptyCellCount <= 3) {
+				if (emptyCellCount === 2) {
+					const firstMoveIndex = data.history.find((id) => data.board[id] !== '');
+					if (firstMoveIndex !== undefined) {
+						updateData.board[firstMoveIndex] = '';
+						updateData.history = data.history.filter(
+							(index) => index !== firstMoveIndex
+						);
+						updateData.disabledCell = updateData.history[0];
+					}
+				} else {
+					updateData.disabledCell = data.history[0];
+				}
 			} else {
 				updateData.disabledCell = -1;
 			}
+
 			const roomDetails = await room.findOneAndUpdate({ roomId: data.roomId }, updateData, {
 				new: true,
 			});
