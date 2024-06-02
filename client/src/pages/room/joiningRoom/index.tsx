@@ -1,23 +1,27 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useAppDispatch } from '@/utils/hooks/appHooks';
+import { useAppDispatch, useAppSelector } from '@/utils/hooks/appHooks';
 import React, { useState } from 'react';
 import { createRoom, joinRoom } from '../redux/thunk';
 import { useNavigate } from 'react-router-dom';
 import { socket } from '@/socket';
+import { roomSelector } from '../redux/selector';
+
 
 const JoiningRoom: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
 	const [roomId, setRoomId] = useState<string>('');
 
+	const { loadingCreateRoom, loadingJoinRoom } = useAppSelector(roomSelector);
+
 	const handleJoinRoom = () => {
-		dispatch(joinRoom(roomId))
+		roomId && dispatch(joinRoom(roomId))
 			.unwrap()
 			.then((res) => {
 				if (res?.result?.roomId) {
-					socket.emit('join', res?.result?.roomId)
+					socket.emit('join', res?.result?.roomId);
 					navigate(`/waiting-room/${res?.result?.roomId}`);
 				}
 			});
@@ -28,7 +32,7 @@ const JoiningRoom: React.FC = () => {
 			.unwrap()
 			.then((res) => {
 				if (res?.result?.roomId) {
-					socket.emit('join', res?.result?.roomId)
+					socket.emit('join', res?.result?.roomId);
 					navigate(`/waiting-room/${res?.result?.roomId}`);
 				}
 			})
@@ -36,7 +40,7 @@ const JoiningRoom: React.FC = () => {
 				console.log(error, 'error res');
 			});
 	};
-	
+
 	return (
 		<main className="mt-12">
 			<Card className="max-w-[500px] mx-auto">
@@ -49,8 +53,11 @@ const JoiningRoom: React.FC = () => {
 						className="text-2xl text-center font-semibold my-6 py-6 tracking-wider"
 					/>
 
-					<Button className="w-full font-semibold my-4" onClick={handleJoinRoom}>
-						Join Now
+					<Button
+						className="w-full font-semibold my-4"
+						onClick={handleJoinRoom}
+						loading={loadingJoinRoom}>
+						Join Room
 					</Button>
 
 					<p className="text-center font-semibold">OR</p>
@@ -58,7 +65,8 @@ const JoiningRoom: React.FC = () => {
 					<Button
 						className="w-full font-semibold mt-4"
 						variant="outline"
-						onClick={generateRoom}>
+						onClick={generateRoom}
+						loading={loadingCreateRoom}>
 						Generate Code
 					</Button>
 				</CardContent>

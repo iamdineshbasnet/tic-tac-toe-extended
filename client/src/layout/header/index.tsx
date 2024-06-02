@@ -10,6 +10,7 @@ const Header: React.FC = () => {
   const dispatch = useAppDispatch()
 
   const isAuthenticated = getCookie('accessToken')
+  
   useEffect(()=>{
     isAuthenticated && dispatch(getPlayer())
   }, [isAuthenticated])
@@ -18,10 +19,10 @@ const Header: React.FC = () => {
 
       <a href='/'>TIC TAC TOE</a>
 
-      <div className='flex items-center gap-4'>
+      {/* <div className='flex items-center gap-4'>
         <Button className='font-semibold capitalize'>classic</Button>
         <Button className='font-semibold capitalize' variant="outline">ultimate</Button>
-      </div>
+      </div> */}
 
       <div className='flex items-center gap-4'>
         <ModeToggle />

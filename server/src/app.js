@@ -91,7 +91,7 @@ io.on('connection', (socket) => {
 			.populate('participants.player', 'username image isGuest name win')
 			.populate('creator', 'username image isGuest name win')
 			.lean();
-		roomDetails.participants = roomDetails.participants.map((participant) => ({
+		roomDetails.participants = roomDetails?.participants.map((participant) => ({
 			...participant.player,
 			mark: participant.mark,
 			_id: participant._id,
@@ -212,6 +212,39 @@ io.on('connection', (socket) => {
 			io.emit('playAgain', roomDetails);
 		} catch (error) {
 			console.log('Error play again', error);
+		}
+	});
+
+	socket.on('leave', async (data) => {
+		try {
+			const { roomId, playerId } = data;
+
+			let playerDetails = await player.findOne({ _id: playerId });
+
+			if (!playerDetails) return;
+
+			let roomDetails = await room
+				.findOneAndUpdate(
+					{ roomId },
+					{ $pull: { participants: { player: playerId } } },
+					{ new: true }
+				)
+				.lean();
+
+			if (!roomDetails) return;
+
+			if (roomDetails.participants.length === 0) {
+				await room.findOneAndDelete({ roomId });
+			} else {
+				// roomDetails.participants = roomDetails.participants.map(participant => ({
+				// 	...participant.player,
+				// 	mark: participant.mark,
+				// 	_id: participant._id,
+				// }))
+				io.emit('leave', playerDetails);
+			}
+		} catch (error) {
+			console.log('Error Leaving game', error);
 		}
 	});
 });

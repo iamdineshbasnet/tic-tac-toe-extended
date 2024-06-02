@@ -74,6 +74,7 @@ const Board: React.FC<BoardProps> = ({
 	const [winningCombination, setWinningCombination] = useState<number[]>([]);
 	const [showDialog, setShowDialog] = useState(false);
 	const [currentPlayer, setCurrentPlayer] = useState<string>('');
+	const [disablePlayAgainBtn, setDisablePlayAgainBtn] = useState<boolean>(false)
 
 	const { pathname } = useLocation();
 
@@ -255,6 +256,7 @@ const Board: React.FC<BoardProps> = ({
 		setTimeout(() => {
 			resetBoard(data);
 			setPlayAgainMessage('');
+			setDisablePlayAgainBtn(false)
 		}, 2000);
 	});
 
@@ -299,8 +301,16 @@ const Board: React.FC<BoardProps> = ({
 	};
 
 	const leaveGame = () => {
-		navigate('/');
+		socket.emit('leave', { roomId: id, playerId: player?._id})
+		navigate('/')
 	};
+
+	socket.on("leave", data =>{
+		if(player?._id !== data._id){
+			setDisablePlayAgainBtn(true)
+			setPlayAgainMessage(`${data.name} leaved the game`)
+		}
+	})
 
 	useEffect(() => {
 		setRandomTurn({ random: random });
@@ -339,7 +349,7 @@ const Board: React.FC<BoardProps> = ({
 								<AlertDialogCancel onClick={leaveGame} autoFocus={false}>
 									Leave
 								</AlertDialogCancel>
-								<AlertDialogAction onClick={playAgain} autoFocus={true}>
+								<AlertDialogAction onClick={playAgain} autoFocus={true} disabled={disablePlayAgainBtn}>
 									Play Again
 								</AlertDialogAction>
 							</AlertDialogFooter>
