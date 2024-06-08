@@ -9,22 +9,26 @@ import { Provider } from 'react-redux';
 import WaitingRoom from './pages/room/waitingRoom';
 import JoiningRoom from './pages/room/joiningRoom';
 import FindingRoom from './pages/room/finding';
+import MyAccount from './pages/profile/Account';
+import AvatarPage from './pages/profile/Avatar';
 function App() {
 	return (
 		<ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
 			<Provider store={store}>
 				<PersistGate persistor={persistor}>
-					<Layout>
 						<Router>
+					<Layout>
 							<Routes>
 								<Route path="/" element={<Homepage />} />
 								<Route path="/playground/:id" element={<Playground />} />
 								<Route path="/waiting-room/:id" element={<WaitingRoom />} />
 								<Route path="/joining-room" element={<JoiningRoom />} />
 								<Route path="/finding-room" element={<FindingRoom />} />
+								<Route path='/account' element={<MyAccount />} />
+								<Route path='/avatars' element={<AvatarPage />} />
 							</Routes>
-						</Router>
 					</Layout>
+						</Router>
 				</PersistGate>
 			</Provider>
 		</ThemeProvider>

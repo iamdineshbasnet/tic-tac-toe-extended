@@ -11,6 +11,7 @@ const Player = require('./routes/player');
 const Room = require('./routes/room');
 const room = require('./model/room');
 const player = require('./model/player');
+const Avatar = require('./routes/avatar');
 
 // express app
 const app = express();
@@ -255,6 +256,8 @@ const VERSION = `/api/${process.env.VERSION}`;
 app.use(`${VERSION}/auth`, Auth);
 app.use(`${VERSION}/player`, Player);
 app.use(`${VERSION}/room`, Room);
+app.use(`${VERSION}/avatar`, Avatar);
+app.use(`${VERSION}/avatars`, express.static('./src/avatars'));
 
 server.listen(PORT, () => {
 	console.log(`Server running at http://localhost:${PORT}`);
