@@ -1,8 +1,8 @@
 const express = require('express')
-const { generateAvatars } = require('../controllers/avatar')
+const { getAvatar } = require('../controllers/avatar')
 
 const router = express.Router()
 
-router.get('/generate', generateAvatars)
+router.get('/', getAvatar)
 
 module.exports = router

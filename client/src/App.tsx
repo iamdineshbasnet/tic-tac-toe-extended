@@ -11,24 +11,26 @@ import JoiningRoom from './pages/room/joiningRoom';
 import FindingRoom from './pages/room/finding';
 import MyAccount from './pages/profile/Account';
 import AvatarPage from './pages/profile/Avatar';
+import { Toaster } from './components/ui/toaster';
 function App() {
 	return (
 		<ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
 			<Provider store={store}>
 				<PersistGate persistor={persistor}>
-						<Router>
-					<Layout>
+					<Router>
+						<Layout>
+							<Toaster />
 							<Routes>
 								<Route path="/" element={<Homepage />} />
 								<Route path="/playground/:id" element={<Playground />} />
 								<Route path="/waiting-room/:id" element={<WaitingRoom />} />
 								<Route path="/joining-room" element={<JoiningRoom />} />
 								<Route path="/finding-room" element={<FindingRoom />} />
-								<Route path='/account' element={<MyAccount />} />
-								<Route path='/avatars' element={<AvatarPage />} />
+								<Route path="/account" element={<MyAccount />} />
+								<Route path="/avatars" element={<AvatarPage />} />
 							</Routes>
-					</Layout>
-						</Router>
+						</Layout>
+					</Router>
 				</PersistGate>
 			</Provider>
 		</ThemeProvider>
