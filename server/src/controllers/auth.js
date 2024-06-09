@@ -1,6 +1,7 @@
 const { generateRandomUsername } = require("../config/generateRandom")
 const player = require("../model/player")
 const jwt = require('jsonwebtoken')
+const { generateAvatar } = require("./avatar")
 
 const createGuest = async(req, res) =>{
   try {
@@ -12,7 +13,11 @@ const createGuest = async(req, res) =>{
     if(!name){
       return res.status(400).json({ message: 'Invalid Credentails'})
     }
-    const guest = new player({ name, username })
+
+    const avatarUrls = await generateAvatar();
+    const randomAvatarUrl = avatarUrls[Math.floor(Math.random() * avatarUrls.length)];
+    console.log(randomAvatarUrl, 'random avatar url')
+    const guest = new player({ name, username, image: randomAvatarUrl })
 
     await guest.save()
 

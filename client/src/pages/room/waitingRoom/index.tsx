@@ -20,6 +20,7 @@ const WaitingRoom: React.FC = () => {
 	const { roomDetails } = useAppSelector(roomSelector);
 	const { player } = useAppSelector(profileSelector);
 	const [showModal, setShowModal] = useState<boolean>(false);
+	const [loadingStart, setLoadingStart] = useState<boolean>(false)
 	const [copied, setCopied] = useState({
 		id: false,
 		link: false,
@@ -52,12 +53,19 @@ const WaitingRoom: React.FC = () => {
 			isPlaying: true,
 		};
 		socket.emit('startGame', obj);
-		navigate(`/playground/${id}`);
+		setLoadingStart(true)
+		setTimeout(() => {
+			navigate(`/playground/${id}`);
+			setLoadingStart(false)
+		}, 2000);
 	};
 
 	socket.on('gameStarted', (data) => {
 		dispatch(setRoomDetails(data));
-		navigate(`/playground/${data.roomId}`);
+		setTimeout(() => {
+			navigate(`/playground/${data.roomId}`);
+			setLoadingStart(false)
+		}, 2000);
 	});
 
 	const copyToClipboard = (type: string, value: string) => {
@@ -78,6 +86,15 @@ const WaitingRoom: React.FC = () => {
 	};
 	const iconTransition = 'transition-all duration-300';
 
+	const userPlaceholder = {
+		_id: "100",
+		name: '???',
+		image: 'https://i.imgur.com/A0vPzPd.jpg',
+		mark: creator?.mark === 'x' ? 'o' : 'x',
+		win: 0,
+		username: 'placeholder',
+		isGuest: true
+	}
 	return (
 		<main className="mt-12 max-w-[500px] mx-auto">
 			{player ? (
@@ -157,14 +174,15 @@ const WaitingRoom: React.FC = () => {
 							{creator && <UserCard data={creator} />}
 						</div>
 						<div className="w-full">
-							{otherPlayer && <UserCard data={otherPlayer} />}
+							{otherPlayer ? <UserCard data={otherPlayer} /> : <UserCard data={userPlaceholder} />}
 						</div>
 					</section>
 					{creator?.username === player?.username && roomDetails?.participants && (
 						<Button
 							className="w-full font-semibold text-lg mt-20"
 							onClick={startGame}
-							disabled={roomDetails?.participants?.length < 2}>
+							loading={loadingStart}
+							disabled={roomDetails?.participants?.length < 2 || loadingStart}>
 							Start
 						</Button>
 					)}

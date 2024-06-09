@@ -24,7 +24,7 @@ const Modal: React.FC<ModalProps> = ({ title, description, children, body, showM
 			<DialogTrigger asChild>{children}</DialogTrigger>
 			{showModal && (
 				<DialogOverlay>
-					<DialogContent className="sm:max-w-[425px]">
+					<DialogContent className="max-w-[360px] sm:max-w-[425px]">
 						<DialogHeader>
 							<DialogTitle>{title}</DialogTitle>
 							<DialogDescription>{description}</DialogDescription>

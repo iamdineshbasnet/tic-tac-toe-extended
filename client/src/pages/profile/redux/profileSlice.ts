@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { getPlayer } from './thunk';
+import { deletePlayer, getPlayer, updatePlayer } from './thunk';
+import deleteCookie from '@/utils/cookies/deleteCookie';
 
 interface PlayerProps {
 	_id: string;
@@ -14,11 +15,15 @@ interface PlayerProps {
 interface ProfileProps {
 	loading: boolean;
 	player: PlayerProps | null;
+	loadingUpdatePlayer: boolean;
+	loadingDeletePlayer: boolean;
 }
 
 const initialState: ProfileProps = {
 	loading: false,
 	player: null,
+	loadingUpdatePlayer: false,
+	loadingDeletePlayer: false,
 };
 
 const profileSlice = createSlice({
@@ -36,6 +41,28 @@ const profileSlice = createSlice({
 		builder.addCase(getPlayer.rejected, (state) => {
 			state.loading = false;
 		});
+		builder.addCase(updatePlayer.pending, (state)=>{
+			state.loadingUpdatePlayer = true
+		})
+		builder.addCase(updatePlayer.fulfilled, (state, { payload: { result }})=>{
+			state.loadingUpdatePlayer = false
+			state.player = result
+		})
+		builder.addCase(updatePlayer.rejected, (state)=>{
+			state.loadingUpdatePlayer = false
+		})
+		builder.addCase(deletePlayer.pending, (state)=>{
+			state.loadingDeletePlayer = true
+		})
+		builder.addCase(deletePlayer.fulfilled, (state)=>{
+			state.player = null
+			state.loadingDeletePlayer = false
+			deleteCookie('accessToken')
+			deleteCookie('refreshToken')
+		})
+		builder.addCase(deletePlayer.rejected, (state)=>{
+			state.loadingDeletePlayer = false
+		})
 	},
 });
 

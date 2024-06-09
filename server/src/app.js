@@ -11,6 +11,7 @@ const Player = require('./routes/player');
 const Room = require('./routes/room');
 const room = require('./model/room');
 const player = require('./model/player');
+const Avatar = require('./routes/avatar');
 
 // express app
 const app = express();
@@ -91,7 +92,7 @@ io.on('connection', (socket) => {
 			.populate('participants.player', 'username image isGuest name win')
 			.populate('creator', 'username image isGuest name win')
 			.lean();
-		roomDetails.participants = roomDetails.participants.map((participant) => ({
+		roomDetails.participants = roomDetails?.participants.map((participant) => ({
 			...participant.player,
 			mark: participant.mark,
 			_id: participant._id,
@@ -214,6 +215,39 @@ io.on('connection', (socket) => {
 			console.log('Error play again', error);
 		}
 	});
+
+	socket.on('leave', async (data) => {
+		try {
+			const { roomId, playerId } = data;
+
+			let playerDetails = await player.findOne({ _id: playerId });
+
+			if (!playerDetails) return;
+
+			let roomDetails = await room
+				.findOneAndUpdate(
+					{ roomId },
+					{ $pull: { participants: { player: playerId } } },
+					{ new: true }
+				)
+				.lean();
+
+			if (!roomDetails) return;
+
+			if (roomDetails.participants.length === 0) {
+				await room.findOneAndDelete({ roomId });
+			} else {
+				// roomDetails.participants = roomDetails.participants.map(participant => ({
+				// 	...participant.player,
+				// 	mark: participant.mark,
+				// 	_id: participant._id,
+				// }))
+				io.emit('leave', playerDetails);
+			}
+		} catch (error) {
+			console.log('Error Leaving game', error);
+		}
+	});
 });
 
 const VERSION = `/api/${process.env.VERSION}`;
@@ -222,6 +256,8 @@ const VERSION = `/api/${process.env.VERSION}`;
 app.use(`${VERSION}/auth`, Auth);
 app.use(`${VERSION}/player`, Player);
 app.use(`${VERSION}/room`, Room);
+app.use(`${VERSION}/avatar`, Avatar);
+app.use(`${VERSION}/avatars`, express.static('./src/avatars'));
 
 server.listen(PORT, () => {
 	console.log(`Server running at http://localhost:${PORT}`);

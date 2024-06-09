@@ -3,18 +3,19 @@ import { Input } from '@/components/ui/input';
 import React, { Dispatch, SetStateAction } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Form, Formik } from 'formik';
-import { useAppDispatch } from '@/utils/hooks/appHooks';
+import { useAppDispatch, useAppSelector } from '@/utils/hooks/appHooks';
 import { createGuest } from '../auth/redux/thunk';
 import { getPlayer } from '../profile/redux/thunk';
 import { socket } from '@/socket';
-import { setRoomDetails } from '../room/redux/roomSlice';
 import { joinRoom } from '../room/redux/thunk';
+import { authSelector } from '../auth/redux/selector';
 
 interface CreateUserProps {
 	setModal: Dispatch<SetStateAction<boolean>>;
 }
 const CreateUser: React.FC<CreateUserProps> = ({ setModal }) => {
 	const dispatch = useAppDispatch();
+	const { loadingGuestRegistration } = useAppSelector(authSelector);
 	const initialState = {
 		name: '',
 	};
@@ -64,7 +65,11 @@ const CreateUser: React.FC<CreateUserProps> = ({ setModal }) => {
 								autoComplete="false"
 							/>
 							<div className="text-right mt-8">
-								<Button type="submit" className="px-6 font-semibold text-md">
+								<Button
+									type="submit"
+									loading={loadingGuestRegistration}
+									disabled={!values.name}
+									className="px-6 font-semibold text-md">
 									Continue
 								</Button>
 							</div>
