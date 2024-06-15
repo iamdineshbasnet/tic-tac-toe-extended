@@ -157,6 +157,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('makemove', async (data) => {
+		console.log("makemove")
 		try {
 			const updateData = {
 				board: data.board,
@@ -251,6 +252,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('playAgain', async (data) => {
+		console.log('play again')
 		try {
 			const updateData = {
 				board: Array(9).fill(''),
@@ -297,7 +299,7 @@ io.on('connection', (socket) => {
 				// 	mark: participant.mark,
 				// 	_id: participant._id,
 				// }))
-				io.emit('leave', playerDetails);
+				io.to(roomId).emit('leave', playerDetails);
 			}
 		} catch (error) {
 			console.log('Error Leaving game', error);

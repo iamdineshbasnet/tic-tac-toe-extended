@@ -20,7 +20,8 @@ const WaitingRoom: React.FC = () => {
 	const { roomDetails } = useAppSelector(roomSelector);
 	const { player } = useAppSelector(profileSelector);
 	const [showModal, setShowModal] = useState<boolean>(false);
-	const [loadingStart, setLoadingStart] = useState<boolean>(false)
+	const [loadingStart, setLoadingStart] = useState<boolean>(false);
+	const [isHost, setIsHost] = useState<boolean>(false)
 	const [copied, setCopied] = useState({
 		id: false,
 		link: false,
@@ -32,11 +33,17 @@ const WaitingRoom: React.FC = () => {
 		id && dispatch(getRoomDetails(id));
 	}, [id]);
 
+	const creator = roomDetails?.participants?.find((c) => c.username === player?.username);
+	const otherPlayer = roomDetails?.participants?.find((c) => c.username !== player?.username);
 
-	const creator = roomDetails?.participants?.find((c) => c.username === roomDetails?.creator.username);
-	const otherPlayer = roomDetails?.participants?.find((c) => c.username !== roomDetails?.creator.username);
-	console.log(player, 'player')
-	console.log(creator, 'creator')
+	
+	useEffect(() => {
+		if (!roomDetails) return;
+
+		setIsHost(roomDetails?.creator?.username === player?.username)
+
+	}, [roomDetails]);
+
 	useEffect(() => {
 		socket.on('join', (data) => {
 			dispatch(setRoomDetails(data));
@@ -47,6 +54,7 @@ const WaitingRoom: React.FC = () => {
 			socket.off('join');
 		};
 	}, []);
+	
 
 	const startGame = () => {
 		const obj = {
@@ -54,10 +62,10 @@ const WaitingRoom: React.FC = () => {
 			isPlaying: true,
 		};
 		socket.emit('startGame', obj);
-		setLoadingStart(true)
+		setLoadingStart(true);
 		setTimeout(() => {
 			navigate(`/playground/${id}`);
-			setLoadingStart(false)
+			setLoadingStart(false);
 		}, 2000);
 	};
 
@@ -65,7 +73,7 @@ const WaitingRoom: React.FC = () => {
 		dispatch(setRoomDetails(data));
 		setTimeout(() => {
 			navigate(`/playground/${data.roomId}`);
-			setLoadingStart(false)
+			setLoadingStart(false);
 		}, 2000);
 	});
 
@@ -88,14 +96,14 @@ const WaitingRoom: React.FC = () => {
 	const iconTransition = 'transition-all duration-300';
 
 	const userPlaceholder = {
-		_id: "100",
+		_id: '100',
 		name: '???',
 		image: 'https://i.imgur.com/A0vPzPd.jpg',
 		mark: creator?.mark === 'x' ? 'o' : 'x',
 		win: 0,
 		username: 'placeholder',
-		isGuest: true
-	}
+		isGuest: true,
+	};
 	return (
 		<main className="mt-12 max-w-[500px] mx-auto">
 			{player ? (
@@ -136,7 +144,7 @@ const WaitingRoom: React.FC = () => {
 							<p className="text-center font-semibold">OR</p>
 							<section className="flex items-center gap-4">
 								<Input
-									value={`http://localhost:5173/waiting-room/${id}`}
+									value={`Share this Link to your friend`}
 									readOnly
 									className="text-base text-center font-normal my-6 py-6"
 								/>
@@ -171,14 +179,16 @@ const WaitingRoom: React.FC = () => {
 					</Card>
 
 					<section className="flex justify-between gap-20 max-w-[600px] mx-auto mt-20">
+						<div className="w-full">{creator && <UserCard data={creator} />}</div>
 						<div className="w-full">
-							{creator && <UserCard data={creator} />}
-						</div>
-						<div className="w-full">
-							{otherPlayer ? <UserCard data={otherPlayer} /> : <UserCard data={userPlaceholder} />}
+							{otherPlayer ? (
+								<UserCard data={otherPlayer} />
+							) : (
+								<UserCard data={userPlaceholder} />
+							)}
 						</div>
 					</section>
-					{creator?.username === player?.username && roomDetails?.participants && (
+					{isHost && roomDetails?.participants && (
 						<Button
 							className="w-full font-semibold text-lg mt-20"
 							onClick={startGame}

@@ -253,6 +253,7 @@ const Board: React.FC<BoardProps> = ({
 	}, [playAgainRequests]);
 
 	socket.on('playAgain', (data) => {
+		console.log(data, 'play again data')
 		setTimeout(() => {
 			resetBoard(data);
 			setPlayAgainMessage('');

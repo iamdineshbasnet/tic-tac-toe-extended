@@ -4,7 +4,7 @@ export interface PlayerProps{
   mark: string;
   image: string;
   win: number;
-  username: string;
+  username?: string;
   isGuest: boolean;
 }
 

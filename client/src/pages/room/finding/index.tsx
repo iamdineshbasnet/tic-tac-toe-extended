@@ -8,8 +8,6 @@ import Loader from '@/components/loader';
 import UserCard from '@/components/card';
 import { roomSelector } from '../redux/selector';
 
-
-
 const FindingRoom: React.FC = () => {
 	const { player } = useAppSelector(profileSelector);
 	const [opponentFound, setOpponentFound] = useState<boolean>(false)
@@ -46,7 +44,6 @@ const FindingRoom: React.FC = () => {
 
 	
 
-	console.log(roomDetails, 'roomdetails')
 
 	const creator = roomDetails?.participants?.find((c) => c.username === player?.username);
 	const otherPlayer = roomDetails?.participants?.find((c) => c.username !== player?.username);

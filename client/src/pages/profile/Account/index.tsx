@@ -9,7 +9,6 @@ import { DialogClose } from '@/components/ui/dialog';
 import { deletePlayer, updatePlayer } from '../redux/thunk';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
-import { ToastAction } from '@/components/ui/toast';
 
 const MyAccount: React.FC = () => {
 	const dispatch = useAppDispatch();
