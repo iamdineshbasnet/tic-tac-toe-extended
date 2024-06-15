@@ -12,6 +12,7 @@ const Room = require('./routes/room');
 const room = require('./model/room');
 const player = require('./model/player');
 const Avatar = require('./routes/avatar');
+const { generateRoomId } = require('./config/generateRandom');
 
 // express app
 const app = express();
@@ -42,8 +43,11 @@ const io = socketIO(server, {
 
 // Store play-again requests
 let playAgainRequests = {};
+// store players looking for opponent player
+let waitingPlayers = [];
 
 io.on('connection', (socket) => {
+	// friend mode
 	socket.on('join', async (roomId) => {
 		socket.join(roomId);
 		let roomDetails = await room
@@ -86,6 +90,57 @@ io.on('connection', (socket) => {
 		}
 	});
 
+	// multiplayer mode
+	socket.on('findOpponent', async (playerId) => {
+		const playerDetails = await player.findById(playerId);
+
+		if (!playerDetails) {
+			socket.emit('error', 'Player not found');
+			return;
+		}
+
+		waitingPlayers.push({ player: playerId, socketId: socket.id });
+		if (waitingPlayers.length >= 2) {
+			const [player1, player2] = waitingPlayers.splice(0, 2);
+			const roomId = generateRoomId();
+
+			const obj = {
+				roomId,
+				participants: [
+					{
+						player: player1.player,
+						mark: 'x',
+					},
+					{
+						player: player2.player,
+						mark: 'o',
+					},
+				],
+				board: Array(9).fill(''),
+				history: [],
+			};
+			const newRoom = new room(obj);
+
+			await newRoom.save();
+
+			let populatedRoom = await room
+				.findById(newRoom._id)
+				.populate('participants.player', 'username image isGuest name win')
+				.populate('creator', 'username image isGuest name win')
+				.lean();
+
+			populatedRoom.participants = populatedRoom.participants.map((participant) => ({
+				...participant.player,
+				mark: participant.mark,
+				_id: participant._id,
+			}));
+
+			io.to(player1.socketId).emit('opponentFound', { message: 'success', details: populatedRoom });
+			io.to(player2.socketId).emit('opponentFound', { message: 'success', details: populatedRoom });
+		}
+	});
+
+	// end of multiplayer mode
 	socket.on('getDetails', async (roomId) => {
 		let roomDetails = await room
 			.findOne({ roomId })

@@ -28,10 +28,10 @@ const Playground: React.FC = () => {
 	const [disabledCell, setDisabledCell] = useState<number>(-1);
 
 	const creator = roomDetails?.participants?.find(
-		(c) => c?.username === roomDetails?.creator.username
+		(c) => c?.username === player?.username
 	);
 	const otherPlayer = roomDetails?.participants?.find(
-		(c) => c?.username !== roomDetails.creator.username
+		(c) => c?.username !== player?.username
 	);
 
 	const filteredPlayer = roomDetails?.participants?.find((p) => p?.username === player?.username);

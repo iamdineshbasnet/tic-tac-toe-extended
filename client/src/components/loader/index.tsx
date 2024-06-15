@@ -1,12 +1,25 @@
 import React from 'react';
 import { tailChase } from 'ldrs';
+import { useTheme } from '../theme-provider';
 
 tailChase.register();
-const Loader: React.FC = () => {
+
+interface LoaderProps{
+	variant?: "outline" | "solid"
+	size?: string;
+}
+const Loader: React.FC<LoaderProps> = ({ variant = "outline", size="24" }) => {
+	const { theme } = useTheme()
+	let loaderColor;
+	if (variant === "solid") {
+		loaderColor = theme === 'light' ? "white" : "black"; 
+	} else {
+		loaderColor = theme === 'light' ? "black" : "white";
+	}
 
 	return (
 		<>
-			<l-tail-chase size="24" speed="1.5" color="black"></l-tail-chase>
+			<l-tail-chase size={size} speed="1.5" color={loaderColor}></l-tail-chase>
 		</>
 	);
 };

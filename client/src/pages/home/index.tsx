@@ -27,9 +27,10 @@ const Homepage: React.FC = () => {
 	const handleMode = (mode: string) => {
 		switch (mode) {
 			case 'friends':
+				dispatch(setMode('friends'))
 				break;
 			case 'multiplayer':
-				dispatch(setMode('pvp'))
+				dispatch(setMode('multiplayer'))
 				break;
 			case 'pvp':
 				dispatch(setMode('pvp'));
@@ -86,12 +87,12 @@ const Homepage: React.FC = () => {
 					)}
 				</li>
 				<li className="mb-4">
-					{!player ? (
+					{player ? (
 						<Modal {...modalProps}>
 							<Button
 								disabled={!isOnline}
 								className="w-[200px] font-semibold text-md"
-								onClick={() => setShowModal(true)}>
+								onClick={() => navigate('/finding-room')}>
 								<Globe strokeWidth={2} size={20} className="me-2" />
 								Multiplayer
 							</Button>
@@ -100,7 +101,7 @@ const Homepage: React.FC = () => {
 						<Button
 							disabled={!isOnline}
 							className="w-[200px] font-semibold text-md"
-							onClick={findPlayer}>
+							onClick={()=> setShowModal(true)}>
 							<Globe strokeWidth={2} size={20} className="me-2" />
 							Multiplayer
 						</Button>

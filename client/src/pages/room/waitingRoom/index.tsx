@@ -35,7 +35,8 @@ const WaitingRoom: React.FC = () => {
 
 	const creator = roomDetails?.participants?.find((c) => c.username === roomDetails?.creator.username);
 	const otherPlayer = roomDetails?.participants?.find((c) => c.username !== roomDetails?.creator.username);
-
+	console.log(player, 'player')
+	console.log(creator, 'creator')
 	useEffect(() => {
 		socket.on('join', (data) => {
 			dispatch(setRoomDetails(data));

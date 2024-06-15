@@ -19,7 +19,7 @@ const Room = new Schema({
 	creator: {
 		type: Schema.Types.ObjectId,
 		ref: 'Player',
-		require: true,
+		require: false,
 	},
 	isPlaying: {
 		type: Boolean,
