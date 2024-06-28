@@ -8,6 +8,7 @@ import { socket } from '@/socket';
 import { setRoomDetails } from '../redux/roomSlice';
 import { profileSelector } from '@/pages/profile/redux/selector';
 import { getOrdinalSuffix } from '@/utils/functions/AppFunctions';
+import { getRoomDetails } from '../redux/thunk';
 
 const Playground: React.FC = () => {
 	const dispatch = useAppDispatch();
@@ -38,8 +39,10 @@ const Playground: React.FC = () => {
 	const isActive = filteredPlayer?.mark === turn;
 
 	useEffect(() => {
+		if(!id) return
 		socket.emit('getDetails', parseInt(id));
 		socket.on('getDetails', (data) => {
+			console.log(data, 'get details')
 			dispatch(setRoomDetails(data));
 			setTurn(data.turn);
 			setBoard(data?.board);
@@ -47,12 +50,7 @@ const Playground: React.FC = () => {
 			setIsPlaying(data?.isPlaying);
 			setRound(data.round)
 		});
-
-		// Clean up the socket event listener on unmount
-		return () => {
-			socket.off('getDetails');
-		};
-	}, [id, dispatch]);
+	}, [id]);
 
 	return (
 		<main className="mt-20 w-[900px] mx-auto">

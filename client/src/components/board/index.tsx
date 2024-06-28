@@ -74,7 +74,7 @@ const Board: React.FC<BoardProps> = ({
 	const [winningCombination, setWinningCombination] = useState<number[]>([]);
 	const [showDialog, setShowDialog] = useState(false);
 	const [currentPlayer, setCurrentPlayer] = useState<string>('');
-	const [disablePlayAgainBtn, setDisablePlayAgainBtn] = useState<boolean>(false)
+	const [disablePlayAgainBtn, setDisablePlayAgainBtn] = useState<boolean>(false);
 
 	const { pathname } = useLocation();
 
@@ -100,10 +100,10 @@ const Board: React.FC<BoardProps> = ({
 		if (disabledCell !== undefined) {
 			obj.disabledCell = disabledCell;
 		}
-		socket.emit('makemove', obj);
+		socket.emit('makeMove', obj);
 	};
 
-	socket.on('makemove', (data) => {
+	socket.on('makeMove', (data) => {
 		setBoard(data.board);
 		setTurn(data.turn);
 		setRoomDetails(data);
@@ -121,49 +121,49 @@ const Board: React.FC<BoardProps> = ({
 	}, [board]);
 
 	const draw = (index: number) => {
-    if (!isActive || index === disabledCell) return;
-    const winner = checkWinner(board);
+		if (!isActive || index === disabledCell) return;
+		const winner = checkWinner(board);
 
-    if (board[index] === '' && winner === null && !isDraw) {
-        const nextTurn = turn === 'x' ? 'o' : 'x';
-        const newData = [...board];
-        newData[index] = turn;
-        const newHistory = [...history, index];
+		if (board[index] === '' && winner === null && !isDraw) {
+			const nextTurn = turn === 'x' ? 'o' : 'x';
+			const newData = [...board];
+			newData[index] = turn;
+			const newHistory = [...history, index];
 
-        playClickSound();
-        setBoard(newData);
-        setHistory(newHistory);
+			playClickSound();
+			setBoard(newData);
+			setHistory(newHistory);
 
-        const emptyCellCount = newData.filter((symbol) => symbol === '').length;
+			const emptyCellCount = newData.filter((symbol) => symbol === '').length;
 
-        if (emptyCellCount <= 3) {
-            if (emptyCellCount === 2) {
-                const firstMoveIndex = newHistory.find((id) => newData[id] !== '');
-                if (firstMoveIndex !== undefined) {
-                    newData[firstMoveIndex] = '';
-                    const updatedHistory = newHistory.filter((id) => id !== firstMoveIndex);
-                    setHistory(updatedHistory);
-                    const newDisabledCell = updatedHistory[0];
-                    setDisabledCell(newDisabledCell);
-                    makemove(nextTurn, newData, updatedHistory, newDisabledCell);
-                }
-            } else {
-                const newDisabledCell = newHistory[0];
-                setDisabledCell(newDisabledCell);
-                makemove(nextTurn, newData, newHistory, newDisabledCell);
-            }
-        } else {
-            setDisabledCell(-1);
-            makemove(nextTurn, newData, newHistory, -1);
-        }
+			if (emptyCellCount <= 3) {
+				if (emptyCellCount === 2) {
+					const firstMoveIndex = newHistory.find((id) => newData[id] !== '');
+					if (firstMoveIndex !== undefined) {
+						newData[firstMoveIndex] = '';
+						const updatedHistory = newHistory.filter((id) => id !== firstMoveIndex);
+						setHistory(updatedHistory);
+						const newDisabledCell = updatedHistory[0];
+						setDisabledCell(newDisabledCell);
+						makemove(nextTurn, newData, updatedHistory, newDisabledCell);
+					}
+				} else {
+					const newDisabledCell = newHistory[0];
+					setDisabledCell(newDisabledCell);
+					makemove(nextTurn, newData, newHistory, newDisabledCell);
+				}
+			} else {
+				setDisabledCell(-1);
+				makemove(nextTurn, newData, newHistory, -1);
+			}
 
-        const nextWinner = checkWinner(newData);
-        if (nextWinner === null) {
-            setTurn(nextTurn);
-        }
-        checkDraw(newData);
-    }
-};
+			const nextWinner = checkWinner(newData);
+			if (nextWinner === null) {
+				setTurn(nextTurn);
+			}
+			checkDraw(newData);
+		}
+	};
 
 	const checkWinner = (board: string[]) => {
 		const conditions = [
@@ -218,12 +218,11 @@ const Board: React.FC<BoardProps> = ({
 		setHistory(data.history);
 		setDisabledCell(data.disabledCell);
 		setIsPlaying(data.isPlaying);
-		setRound(data.round)
+		setRound(data.round);
 	};
 
 	const playAgain = () => {
 		if (!playAgainRequests.includes(player?.username)) {
-			
 			const updatedRequests = [...playAgainRequests, player?.username];
 			setPlayAgainRequests(updatedRequests);
 		}
@@ -242,7 +241,7 @@ const Board: React.FC<BoardProps> = ({
 					const updatedRequests = [...playAgainRequests, p?.username];
 					setPlayAgainRequests(updatedRequests);
 				}
-			} 
+			}
 		});
 	});
 
@@ -253,11 +252,10 @@ const Board: React.FC<BoardProps> = ({
 	}, [playAgainRequests]);
 
 	socket.on('playAgain', (data) => {
-		console.log(data, 'play again data')
 		setTimeout(() => {
 			resetBoard(data);
 			setPlayAgainMessage('');
-			setDisablePlayAgainBtn(false)
+			setDisablePlayAgainBtn(false);
 		}, 2000);
 	});
 
@@ -302,16 +300,16 @@ const Board: React.FC<BoardProps> = ({
 	};
 
 	const leaveGame = () => {
-		socket.emit('leave', { roomId: id, playerId: player?._id})
+		socket.emit('leave', { roomId: id, playerId: player?._id });
 		navigate('/')
 	};
 
-	socket.on("leave", data =>{
-		if(player?._id !== data._id){
-			setDisablePlayAgainBtn(true)
-			setPlayAgainMessage(`${data.name} leaved the game`)
+	socket.on('leaved', (data) => {
+		if (player?._id !== data._id) {
+			setDisablePlayAgainBtn(true);
+			setPlayAgainMessage(`${data.name} leaved the game`);
 		}
-	})
+	});
 
 	useEffect(() => {
 		setRandomTurn({ random: random });
@@ -350,7 +348,10 @@ const Board: React.FC<BoardProps> = ({
 								<AlertDialogCancel onClick={leaveGame} autoFocus={false}>
 									Leave
 								</AlertDialogCancel>
-								<AlertDialogAction onClick={playAgain} autoFocus={true} disabled={disablePlayAgainBtn}>
+								<AlertDialogAction
+									onClick={playAgain}
+									autoFocus={true}
+									disabled={disablePlayAgainBtn}>
 									Play Again
 								</AlertDialogAction>
 							</AlertDialogFooter>
