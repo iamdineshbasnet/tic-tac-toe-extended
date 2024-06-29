@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import React, { Dispatch, SetStateAction } from 'react';
+import React, { Dispatch, SetStateAction, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Form, Formik } from 'formik';
 import { useAppDispatch, useAppSelector } from '@/utils/hooks/appHooks';
@@ -9,6 +9,7 @@ import { getPlayer } from '../profile/redux/thunk';
 import { socket } from '@/socket';
 import { joinRoom } from '../room/redux/thunk';
 import { authSelector } from '../auth/redux/selector';
+import { roomSelector } from '../room/redux/selector';
 
 interface CreateUserProps {
 	setModal: Dispatch<SetStateAction<boolean>>;
@@ -16,6 +17,8 @@ interface CreateUserProps {
 const CreateUser: React.FC<CreateUserProps> = ({ setModal }) => {
 	const dispatch = useAppDispatch();
 	const { loadingGuestRegistration } = useAppSelector(authSelector);
+	const { mode } = useAppSelector(roomSelector)
+	console.log(mode, 'mode')
 	const initialState = {
 		name: '',
 	};
@@ -27,17 +30,21 @@ const CreateUser: React.FC<CreateUserProps> = ({ setModal }) => {
 		dispatch(createGuest(values))
 			.unwrap()
 			.then((res) => {
-				if (pathname.includes('/waiting-room/')) {
-					dispatch(joinRoom(roomId))
-						.unwrap()
-						.then((res) => {
-							if (res?.result?.roomId) {
-								socket.emit('join', res?.result?.roomId);
-								socket.on('join', res?.result?.roomId);
-							}
-						});
-				} else {
-					res?.accessToken && navigate('/joining-room');
+				if(mode === 'friends'){
+					if (pathname.includes('/waiting-room/')) {
+						dispatch(joinRoom(roomId))
+							.unwrap()
+							.then((res) => {
+								if (res?.result?.roomId) {
+									socket.emit('join', res?.result?.roomId);
+									socket.on('join', res?.result?.roomId);
+								}
+							});
+					} else {
+						res?.accessToken && navigate('/joining-room');
+					}
+				}else if(mode === 'multiplayer'){
+					navigate('/finding-room')
 				}
 				dispatch(getPlayer());
 				setModal(false);

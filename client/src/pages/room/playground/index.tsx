@@ -8,7 +8,6 @@ import { socket } from '@/socket';
 import { setRoomDetails } from '../redux/roomSlice';
 import { profileSelector } from '@/pages/profile/redux/selector';
 import { getOrdinalSuffix } from '@/utils/functions/AppFunctions';
-import { getRoomDetails } from '../redux/thunk';
 
 const Playground: React.FC = () => {
 	const dispatch = useAppDispatch();

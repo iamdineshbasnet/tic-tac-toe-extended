@@ -11,11 +11,11 @@ import {
 	AlertDialogTitle,
 } from '../ui/alert-dialog';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '@/utils/hooks/appHooks';
+import { useAppSelector } from '@/utils/hooks/appHooks';
 import { PlayerProps } from '@/pages/room/redux/types';
 import useLocalStorage from 'use-local-storage';
 import { roomSelector } from '@/pages/room/redux/selector';
-import { setRoomDetails, setRound } from '@/pages/room/redux/roomSlice';
+import { setRoomDetails } from '@/pages/room/redux/roomSlice';
 import { socket } from '@/socket';
 import { profileSelector } from '@/pages/profile/redux/selector';
 
@@ -49,7 +49,6 @@ const Board: React.FC<BoardProps> = ({
 	random = false,
 	isActive,
 	turn,
-	isPlaying,
 	board,
 	history,
 	disabledCell,
@@ -65,9 +64,8 @@ const Board: React.FC<BoardProps> = ({
 	setPlayAgainMessage,
 	setPlayAgainRequests,
 }) => {
-	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
-	const [randomTurn, setRandomTurn] = useLocalStorage('game', { random: random });
+	const [_, setRandomTurn] = useLocalStorage('game', { random: random });
 	const { roomDetails } = useAppSelector(roomSelector);
 	const { player } = useAppSelector(profileSelector);
 	const [isDraw, setIsDraw] = useState<boolean>(false);
