@@ -17,7 +17,7 @@ const FindingRoom: React.FC = () => {
 
 	useEffect(() => {
 		player &&
-			socket.on('opponentFound', (data) => {
+			socket.on('opponent_found', (data) => {
 				if (data.message === 'success') {
 					setOpponentFound(true);
 				} else {
@@ -33,12 +33,12 @@ const FindingRoom: React.FC = () => {
 			});
 
 		return () => {
-			socket.off('opponentFound');
+			socket.off('opponent_found');
 		};
 	}, [player]);
 
 	useEffect(() => {
-		player && socket.emit('findOpponent', player?._id);
+		player && socket.emit('find_opponent', player?._id);
 		dispatch(setRoomDetails(null));
 	}, [player]);
 

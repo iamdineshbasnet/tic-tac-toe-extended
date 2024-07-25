@@ -7,120 +7,134 @@ let waitingPlayers = [];
 
 module.exports = (io) => {
 	io.sockets.on('connection', (socket) => {
-		socket.on('join', async (roomId) => {
-			socket.join(roomId);
-			try {
-				let roomDetails = await Room.findOne({ roomId })
-					.populate('participants.player', 'username image isGuest name win')
-					.populate('creator', 'username image isGuest name win')
-					.lean();
+		socket.on('create_room', async (data) => {
+			const socketRoomId = Array.from(socket.rooms).join(',');
+			const roomId = generateRoomId();
+			const created_room = new Room({
+				roomId,
+				participants: [
+					{
+						player: data._id,
+						mark: 'x',
+						player_socket_id: socket.id,
+					},
+				],
+				creator: data._id,
+				board: Array(9).fill(''),
+				history: [],
+				socket_room_id: socketRoomId,
+			});
 
-				if (roomDetails && roomDetails.participants.length <= 2) {
-					roomDetails.participants = roomDetails.participants.map((participant) => ({
-						...participant.player,
-						mark: participant.mark,
-						_id: participant._id,
-					}));
+			await created_room.save();
 
-					io.sockets.in(roomId).emit('join', roomDetails);
-				}
-			} catch (error) {
-				console.error('Error fetching room details:', error);
-			}
+			let populated_room = await Room.findById(created_room._id)
+				.populate('participants.player', 'username image isGuest name win')
+				.populate('creator', 'username image isGuest name win')
+				.lean();
+
+			populated_room.participants = populated_room.participants.map((participant) => ({
+				...participant.player,
+				mark: participant.mark,
+				_id: participant.id,
+				player_socket_id: participant.player_socket_id,
+			}));
+
+			socket.join(socketRoomId);
+			socket.emit('room_created', populated_room);
+			socket.roomId = roomId;
 		});
 
-		socket.on('startGame', async (data) => {
+		// Get room details
+		socket.on('get_room_details', async (roomId) => {
+			let room_details = await Room.findOne({ roomId })
+				.populate('participants.player', 'username image isGuest name win')
+				.populate('creator', 'username image isGuest name win')
+				.lean();
+
+			room_details.participants = room_details?.participants.map((participant) => ({
+				...participant.player,
+				mark: participant.mark,
+				_id: participant._id,
+				player_socket_id: participant.player_socket_id,
+			}));
+
+			socket.join(room_details.socket_room_id);
+			io.to(room_details.socket_room_id).emit('room_details', room_details);
+		});
+
+		// Join room
+		socket.on('join_room', async (data) => {
+			const player = data.player._id;
+			const roomId = data.roomId;
+
+			const room_details = await Room.findOne({ roomId });
+
+			if (room_details.participants.length >= 2) {
+				socket.emit('room_full', {
+					message: 'The room is full and cannot accept more players.',
+				});
+				return;
+			}
+
+			room_details.participants.push({
+				player: player,
+				mark: 'o',
+				player_socket_id: socket.id,
+			});
+
+			await room_details.save();
+
+			let populated_room = await Room.findById(room_details._id)
+				.populate('participants.player', 'username image isGuest name win')
+				.populate('creator', 'username image isGuest name win')
+				.lean();
+
+			populated_room.participants = populated_room.participants.map((participant) => ({
+				...participant.player,
+				mark: participant.mark,
+				_id: participant.id,
+				player_socket_id: participant.player_socket_id,
+			}));
+
+			socket.join(populated_room.socket_room_id);
+			io.to(populated_room.socket_room_id).emit('room_joined', populated_room);
+			socket.roomId = roomId;
+		});
+
+		// Start game
+		socket.on('start_game', async (data) => {
 			try {
-				console.log('starting...', data);
 				const updateData = { isPlaying: data.isPlaying };
-				let roomDetails = await Room.findOneAndUpdate({ roomId: data.roomId }, updateData, {
-					new: true,
-				})
+				let room_details = await Room.findOneAndUpdate(
+					{ roomId: data.roomId },
+					updateData,
+					{
+						new: true,
+					}
+				)
 					.populate('participants.player', 'username image isGuest name win')
 					.populate('creator', 'username image isGuest name win')
 					.lean();
 
-				if (roomDetails && roomDetails.participants.length <= 2) {
-					roomDetails.participants = roomDetails.participants.map((participant) => ({
+				if (room_details && room_details.participants.length <= 2) {
+					room_details.participants = room_details.participants.map((participant) => ({
 						...participant.player,
 						mark: participant.mark,
 						_id: participant._id,
+						player_socket_id: participant.player_socket_id,
 					}));
 				}
 
-				io.sockets.in(data.roomId).emit('gameStarted', roomDetails);
+				socket.join(room_details.socket_room_id);
+				io.to(room_details.socket_room_id).emit('game_start', room_details);
 			} catch (error) {
 				console.log('Error in game start', error);
 			}
 		});
 
-		socket.on('findOpponent', async (playerId) => {
-			const playerDetails = await Player.findById(playerId);
-
-			if (!playerDetails) {
-				socket.emit('error', 'Player not found');
-				return;
-			}
-
-			waitingPlayers.push({ player: playerId, socketId: socket.id });
-			if (waitingPlayers.length >= 2) {
-				const [player1, player2] = waitingPlayers.splice(0, 2);
-				const roomId = generateRoomId();
-
-				const newRoom = new Room({
-					roomId,
-					participants: [
-						{ player: player1.player, mark: 'x' },
-						{ player: player2.player, mark: 'o' },
-					],
-					board: Array(9).fill(''),
-					history: [],
-					isPlaying: false,
-				});
-
-				await newRoom.save();
-				socket.join(newRoom._id);
-
-				let populatedRoom = await Room.findById(newRoom._id)
-					.populate('participants.player', 'username image isGuest name win')
-					.populate('creator', 'username image isGuest name win')
-					.lean();
-				populatedRoom.participants = populatedRoom.participants.map((participant) => ({
-					...participant.player,
-					mark: participant.mark,
-					_id: participant._id,
-				}));
-
-				io.to(player1.socketId).emit('opponentFound', {
-					message: 'success',
-					details: populatedRoom,
-				});
-				io.to(player2.socketId).emit('opponentFound', {
-					message: 'success',
-					details: populatedRoom,
-				});
-			}
-		});
-
-		socket.on('getDetails', async (roomId) => {
-      socket.join(roomId);
-			let roomDetails = await Room.findOne({ roomId })
-				.populate('participants.player', 'username image isGuest name win')
-				.populate('creator', 'username image isGuest name win')
-				.lean();
-
-			roomDetails.participants = roomDetails?.participants.map((participant) => ({
-				...participant.player,
-				mark: participant.mark,
-				_id: participant._id,
-			}));
-
-			io.sockets.in(roomId).emit('getDetails', roomDetails);
-		});
-
-		socket.on('makeMove', async (data) => {
+		// Make move
+		socket.on('make_move', async (data) => {
 			try {
-        socket.join(data.roomId)
 				const updateData = {
 					board: data.board,
 					turn: data.turn,
@@ -146,19 +160,20 @@ module.exports = (io) => {
 					updateData.disabledCell = -1;
 				}
 
-				const roomDetails = await Room.findOneAndUpdate(
+				const room_details = await Room.findOneAndUpdate(
 					{ roomId: data.roomId },
 					updateData,
 					{ new: true }
 				);
-
-				io.sockets.in(data.roomId).emit('makeMove', roomDetails);
+				socket.join(room_details.socket_room_id);
+				io.sockets.in(room_details.socket_room_id).emit('move_made', room_details);
 			} catch (error) {
 				console.error('Error updating room:', error);
 			}
 		});
 
-		socket.on('gameWin', async (data) => {
+		// Game win
+		socket.on('game_win', async (data) => {
 			try {
 				const { roomId, winner, loser } = data;
 				await Room.findOneAndUpdate({ roomId }, { isPlaying: false });
@@ -166,24 +181,24 @@ module.exports = (io) => {
 				await Player.updateOne({ username: winner }, { $inc: { win: 1 } });
 				await Player.updateOne({ username: loser }, { $inc: { lose: 1 } });
 
-				let updatedRoomDetails = await Room.findOne({ roomId })
+				let room_details = await Room.findOne({ roomId })
 					.populate('participants.player', 'username image isGuest name win')
 					.populate('creator', 'username image isGuest name win')
 					.lean();
 
-				updatedRoomDetails.participants = updatedRoomDetails.participants.map(
-					(participant) => ({
-						...participant.player,
-						mark: participant.mark,
-						_id: participant._id,
-					})
-				);
+				room_details.participants = room_details.participants.map((participant) => ({
+					...participant.player,
+					mark: participant.mark,
+					_id: participant._id,
+					player_socket_id: participant.player_socket_id,
+				}));
 
 				const updatedWinner = await Player.findOne({ username: winner });
 				const updatedLoser = await Player.findOne({ username: loser });
 
-				io.sockets.in(roomId).emit('gameWin', {
-					roomDetails: updatedRoomDetails,
+				socket.join(room_details.socket_room_id);
+				io.sockets.in(room_details.socket_room_id).emit('game_won', {
+					roomDetails: room_details,
 					winner: updatedWinner,
 					loser: updatedLoser,
 				});
@@ -192,10 +207,11 @@ module.exports = (io) => {
 			}
 		});
 
-		socket.on('playAgainRequest', async (data) => {
+		// Request play again
+		socket.on('request_play_again', async (data) => {
 			try {
 				const { roomId, username, name } = data;
-
+				let room_details = await Room.findOne({ roomId });
 				if (!playAgainRequests[roomId]) {
 					playAgainRequests[roomId] = [];
 				}
@@ -208,13 +224,17 @@ module.exports = (io) => {
 					playAgainRequests[roomId].push({ username, name });
 				}
 
-				io.sockets.in(roomId).emit('playAgainRequested', playAgainRequests[roomId]);
+				socket.join(room_details.socket_room_id);
+				io.sockets
+					.in(room_details.socket_room_id)
+					.emit('play_again_request', playAgainRequests[roomId]);
 			} catch (error) {
 				console.log('Error notifying play again request', error);
 			}
 		});
 
-		socket.on('playAgain', async (data) => {
+		// Play again
+		socket.on('play_again', async (data) => {
 			socket.join(data.roomId);
 			try {
 				const updateData = {
@@ -225,54 +245,125 @@ module.exports = (io) => {
 					isPlaying: true,
 					round: data.round,
 				};
-				const roomDetails = await Room.findOneAndUpdate(
+				const room_details = await Room.findOneAndUpdate(
 					{ roomId: data.roomId },
 					updateData,
 					{ new: true }
 				);
 
-				if (!roomDetails) {
+				if (!room_details) {
 					console.log(`Room ${data.roomId} not found for playAgain.`);
 					return;
 				}
 
 				playAgainRequests[data.roomId] = [];
-				io.sockets.in(data.roomId).emit('playAgain', roomDetails);
+
+				socket.join(room_details.socket_room_id);
+				io.sockets.in(room_details.socket_room_id).emit('play_again', room_details);
 			} catch (error) {
 				console.log('Error play again', error);
 			}
 		});
 
+		// Leave room
 		socket.on('leave', async (data) => {
 			socket.join(data.roomId);
 			try {
 				const { roomId, playerId } = data;
 
-				let playerDetails = await Player.findOne({ _id: playerId });
+				let player = await Player.findOne({ _id: playerId });
 
-				if (!playerDetails) {
+				if (!player) {
 					console.log(`Player ${playerId} not found for leave.`);
 					return;
 				}
 
-				let roomDetails = await Room.findOneAndUpdate(
+				let room_details = await Room.findOneAndUpdate(
 					{ roomId },
 					{ $pull: { participants: { player: playerId } } },
 					{ new: true }
 				).lean();
 
-				if (!roomDetails) {
+				if (!room_details) {
 					console.log(`Room ${roomId} not found for leave.`);
 					return;
 				}
 
-				if (roomDetails.participants.length === 0) {
+				if (room_details.participants.length === 0) {
 					await Room.findOneAndDelete({ roomId });
 				} else {
-					io.sockets.in(roomId).emit('leaved', playerDetails);
+					socket.join(room_details.socket_room_id);
+					io.sockets.in(room_details.socket_room_id).emit('left', player);
 				}
 			} catch (error) {
 				console.log('Error leaving game', error);
+			}
+		});
+
+		// Find opponent
+		socket.on('find_opponent', async (playerId) => {
+			const player_details = await Player.findById(playerId);
+			const socketRoomId = Array.from(socket.rooms).join(',');
+			if (!player_details) {
+				socket.emit('error', 'Player not found');
+				return;
+			}
+
+			if (waitingPlayers.length === 0) {
+				waitingPlayers.push({ player: playerId, socketId: socket.id });
+			} else {
+				waitingPlayers?.forEach((p) => {
+					if (p.playerId !== playerId) {
+						waitingPlayers.push({ player: playerId, socketId: socket.id });
+					}
+				});
+			}
+			if (waitingPlayers.length >= 2) {
+				const [player1, player2] = waitingPlayers.splice(0, 2);
+				const roomId = generateRoomId();
+
+				const newRoom = new Room({
+					roomId,
+					participants: [
+						{
+							player: player1.player,
+							mark: 'x',
+							player_socket_id: socket.id,
+						},
+						{
+							player: player2.player,
+							mark: 'o',
+							player_socket_id: socket.id,
+						},
+					],
+					board: Array(9).fill(''),
+					history: [],
+					isPlaying: false,
+					socket_room_id: socketRoomId,
+				});
+
+				await newRoom.save();
+				socket.join(socketRoomId);
+
+				let populated_room = await Room.findById(newRoom._id)
+					.populate('participants.player', 'username image isGuest name win')
+					.populate('creator', 'username image isGuest name win')
+					.lean();
+				populated_room.participants = populated_room.participants.map((participant) => ({
+					...participant.player,
+					mark: participant.mark,
+					_id: participant._id,
+					player_socket_id: participant.player_socket_id,
+				}));
+
+				io.to(player1.socketId).emit('opponent_found', {
+					message: 'success',
+					details: populated_room,
+				});
+				io.to(player2.socketId).emit('opponent_found', {
+					message: 'success',
+					details: populated_room,
+				});
 			}
 		});
 	});

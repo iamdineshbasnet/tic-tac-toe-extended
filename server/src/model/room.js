@@ -14,8 +14,16 @@ const Room = new Schema({
 				enum: ['x', 'o'],
 				require: true,
 			},
+			player_socket_id: {
+				type: String,
+				require: true,
+			}
 		},
 	],
+	socket_room_id: {
+		type: String,
+		require: true
+	},
 	creator: {
 		type: Schema.Types.ObjectId,
 		ref: 'Player',

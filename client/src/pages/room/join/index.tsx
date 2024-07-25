@@ -2,14 +2,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useAppDispatch, useAppSelector } from '@/utils/hooks/appHooks';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createRoom, joinRoom } from '../redux/thunk';
 import { useNavigate } from 'react-router-dom';
 import { socket } from '@/socket';
 import { roomSelector } from '../redux/selector';
 import { useToast } from '@/components/ui/use-toast';
+import { profileSelector } from '@/pages/profile/redux/selector';
 
 const JoiningRoom: React.FC = () => {
+	const { player } = useAppSelector(profileSelector)
 	const { toast } = useToast();
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
@@ -18,42 +20,57 @@ const JoiningRoom: React.FC = () => {
 	const { loadingCreateRoom, loadingJoinRoom } = useAppSelector(roomSelector);
 
 	const handleJoinRoom = () => {
-		roomId &&
-			dispatch(joinRoom(roomId))
-				.unwrap()
-				.then((res) => {
-					if (res?.result?.roomId) {
-						socket.emit('join', res?.result?.roomId);
-						navigate(`/waiting-room/${res?.result?.roomId}`);
-					}
-				})
-				.catch(() => {
-					toast({
-						duration: 3000,
-						variant: 'destructive',
-						title: 'Uh oh! Something went wrong.',
-						description: 'There was a problem with your request.',
-					});
-				});
+		socket.emit('join_room', {roomId, player})
+
+		
+		// roomId &&
+		// 	dispatch(joinRoom(roomId))
+		// 		.unwrap()
+		// 		.then((res) => {
+		// 			if (res?.result?.roomId) {
+		// 				socket.emit('join', res?.result?.roomId);
+		// 				navigate(`/waiting-room/${res?.result?.roomId}`);
+		// 			}
+		// 		})
+		// 		.catch(() => {
+		// 			toast({
+		// 				duration: 3000,
+		// 				variant: 'destructive',
+		// 				title: 'Uh oh! Something went wrong.',
+		// 				description: 'There was a problem with your request.',
+		// 			});
+		// 		});
 	};
 
+	socket.on('room_joined', (details)=>{
+		navigate(`/waiting-room/${details?.roomId}`);
+	})
+
+	socket.on('room_full', (message)=>{
+		console.log(message)
+	})
+
 	const generateRoom = () => {
-		dispatch(createRoom())
-			.unwrap()
-			.then((res) => {
-				if (res?.result?.roomId) {
-					socket.emit('join', res?.result?.roomId);
-					navigate(`/waiting-room/${res?.result?.roomId}`);
-				}
-			})
-			.catch(() => {
-				toast({
-					duration: 3000,
-					variant: 'destructive',
-					title: 'Uh oh! Something went wrong.',
-					description: 'There was a problem with your request.',
-				});
-			});
+		socket.emit('create_room', player)
+		socket.on('room_created', (details)=>{
+			navigate(`/waiting-room/${details?.roomId}`)
+		})
+		// dispatch(createRoom())
+		// 	.unwrap()
+		// 	.then((res) => {
+		// 		if (res?.result?.roomId) {
+		// 			socket.emit('join', res?.result?.roomId);
+		// 			navigate(`/waiting-room/${res?.result?.roomId}`);
+		// 		}
+		// 	})
+		// 	.catch(() => {
+		// 		toast({
+		// 			duration: 3000,
+		// 			variant: 'destructive',
+		// 			title: 'Uh oh! Something went wrong.',
+		// 			description: 'There was a problem with your request.',
+		// 		});
+		// 	});
 	};
 
 	return (

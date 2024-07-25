@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useAppDispatch, useAppSelector } from '@/utils/hooks/appHooks';
 import { Check, Copy } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { roomSelector } from '../redux/selector';
 import { getRoomDetails } from '../redux/thunk';
 import { profileSelector } from '@/pages/profile/redux/selector';
@@ -26,8 +26,7 @@ const WaitingRoom: React.FC = () => {
 		id: false,
 		link: false,
 	});
-	const { pathname } = useLocation();
-	const id = pathname.split('/waiting-room/')[1];
+	const { id } = useParams()
 
 	useEffect(() => {
 		id && dispatch(getRoomDetails(id));
@@ -55,13 +54,16 @@ const WaitingRoom: React.FC = () => {
 		};
 	}, []);
 	
+	socket.on('room_joined', (details)=>{
+		dispatch(setRoomDetails(details))
+	})
 
 	const startGame = () => {
 		const obj = {
-			roomId: parseInt(id),
+			roomId: id && parseInt(id),
 			isPlaying: true,
 		};
-		socket.emit('startGame', obj);
+		socket.emit('start_game', obj);
 		setLoadingStart(true);
 		setTimeout(() => {
 			navigate(`/playground/${id}`);
@@ -69,7 +71,7 @@ const WaitingRoom: React.FC = () => {
 		}, 2000);
 	};
 
-	socket.on('gameStarted', (data) => {
+	socket.on('game_start', (data) => {
 		dispatch(setRoomDetails(data));
 		setTimeout(() => {
 			navigate(`/playground/${data.roomId}`);
@@ -123,7 +125,7 @@ const WaitingRoom: React.FC = () => {
 									variant="outline"
 									size="icon"
 									className="p-6 relative"
-									onClick={() => copyToClipboard('id', id)}>
+									onClick={() => id && copyToClipboard('id', id)}>
 									<Copy
 										className={`absolute h-[1.2rem] w-[1.2rem] ${iconTransition} ${
 											copied.id

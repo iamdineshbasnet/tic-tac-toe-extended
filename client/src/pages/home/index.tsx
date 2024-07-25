@@ -28,23 +28,25 @@ const Homepage: React.FC = () => {
 		switch (mode) {
 			case 'friends':
 				dispatch(setMode('friends'));
+				setShowModal(true);
 				break;
 			case 'multiplayer':
 				dispatch(setMode('multiplayer'));
+				setShowModal(true);
 				break;
 			case 'pvp':
 				dispatch(setMode('pvp'));
 				navigate('/offline/pvp');
 				break;
-				case 'bot':
-					dispatch(setMode('bot'));
-					navigate('/offline/bot');
+			case 'bot':
+				dispatch(setMode('bot'));
+				navigate('/offline/bot');
 				break;
 			default:
 				break;
 		}
 		dispatch(setRound(1));
-		setShowModal(true)
+		setShowModal(true);
 	};
 
 	const modalProps = {
@@ -73,7 +75,7 @@ const Homepage: React.FC = () => {
 							<Button
 								disabled={!isOnline}
 								className="w-[200px] font-semibold text-md"
-								onClick={() => setShowModal(true)}>
+								onClick={() => handleMode('friends')}>
 								<Users strokeWidth={2} size={20} className="me-2" />
 								Friends
 							</Button>
@@ -94,7 +96,7 @@ const Homepage: React.FC = () => {
 							<Button
 								disabled={!isOnline}
 								className="w-[200px] font-semibold text-md"
-								onClick={() => handleMode("multiplayer")}>
+								onClick={() => handleMode('multiplayer')}>
 								<Globe strokeWidth={2} size={20} className="me-2" />
 								Multiplayer
 							</Button>

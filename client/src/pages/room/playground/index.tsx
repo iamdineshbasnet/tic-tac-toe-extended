@@ -3,7 +3,7 @@ import UserCard from '@/components/card';
 import { useAppDispatch, useAppSelector } from '@/utils/hooks/appHooks';
 import React, { useEffect, useState } from 'react';
 import { roomSelector } from '../redux/selector';
-import { useLocation } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { socket } from '@/socket';
 import { setRoomDetails } from '../redux/roomSlice';
 import { profileSelector } from '@/pages/profile/redux/selector';
@@ -14,8 +14,7 @@ const Playground: React.FC = () => {
 	const { roomDetails } = useAppSelector(roomSelector);
 	const { player } = useAppSelector(profileSelector);
 
-	const { pathname } = useLocation();
-	const id = pathname.split('/playground/')[1];
+	const { id } = useParams();
 
 	const [board, setBoard] = useState<string[]>(Array(9).fill(''));
 	const [history, setHistory] = useState<number[]>([]);
@@ -23,34 +22,30 @@ const Playground: React.FC = () => {
 	const [isPlaying, setIsPlaying] = useState<boolean>(false);
 	const [playAgainMessage, setPlayAgainMessage] = useState<string>('');
 	const [playAgainRequests, setPlayAgainRequests] = useState<string[] | any>([]);
-	const [round, setRound] = useState<number>(1)
+	const [round, setRound] = useState<number>(1);
 	// State to track disabled cells
 	const [disabledCell, setDisabledCell] = useState<number>(-1);
 
-	const creator = roomDetails?.participants?.find(
-		(c) => c?.username === player?.username
-	);
-	const otherPlayer = roomDetails?.participants?.find(
-		(c) => c?.username !== player?.username
-	);
+	const creator = roomDetails?.participants?.find((c) => c?.username === player?.username);
+	const otherPlayer = roomDetails?.participants?.find((c) => c?.username !== player?.username);
 
 	const filteredPlayer = roomDetails?.participants?.find((p) => p?.username === player?.username);
 	const isActive = filteredPlayer?.mark === turn;
 
 	useEffect(() => {
-		if(!id) return
-		socket.emit('getDetails', parseInt(id));
-		socket.on('getDetails', (data) => {
-			console.log(data, 'get details')
+		if (!id) return;
+		socket.emit('get_room_details', parseInt(id));
+		socket.on('room_details', (data) => {
 			dispatch(setRoomDetails(data));
 			setTurn(data.turn);
 			setBoard(data?.board);
 			setHistory(data?.history);
 			setIsPlaying(data?.isPlaying);
-			setRound(data.round)
+			setRound(data.round);
 		});
 	}, [id]);
 
+	
 	return (
 		<main className="mt-20 w-[900px] mx-auto">
 			<section className="flex justify-between gap-12">
@@ -88,7 +83,6 @@ const Playground: React.FC = () => {
 						setPlayAgainRequests={setPlayAgainRequests}
 					/>
 				)}
-				
 			</section>
 		</main>
 	);

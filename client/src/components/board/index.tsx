@@ -98,10 +98,10 @@ const Board: React.FC<BoardProps> = ({
 		if (disabledCell !== undefined) {
 			obj.disabledCell = disabledCell;
 		}
-		socket.emit('makeMove', obj);
+		socket.emit('make_move', obj);
 	};
 
-	socket.on('makeMove', (data) => {
+	socket.on('move_made', (data) => {
 		setBoard(data.board);
 		setTurn(data.turn);
 		setRoomDetails(data);
@@ -188,14 +188,14 @@ const Board: React.FC<BoardProps> = ({
 	};
 
 	const handlewinGame = (winner: PlayerProps, loser: PlayerProps) => {
-		socket.emit('gameWin', {
+		socket.emit('game_win', {
 			roomId: parseInt(id),
 			winner: winner.username,
 			loser: loser.username,
 		});
 	};
 
-	socket.on('gameWin', (data) => {
+	socket.on('game_won', (data) => {
 		setIsPlaying(data.isPlaying);
 	});
 
@@ -224,14 +224,14 @@ const Board: React.FC<BoardProps> = ({
 			const updatedRequests = [...playAgainRequests, player?.username];
 			setPlayAgainRequests(updatedRequests);
 		}
-		socket.emit('playAgainRequest', {
+		socket.emit('request_play_again', {
 			roomId: parseInt(id),
 			username: player?.username,
 			name: player?.name,
 		});
 	};
 
-	socket.on('playAgainRequested', (data) => {
+	socket.on('play_again_request', (data) => {
 		data.forEach((p: any) => {
 			if (p.username !== player?.username) {
 				setPlayAgainMessage(`${p.name} wants to play again`);
@@ -245,11 +245,11 @@ const Board: React.FC<BoardProps> = ({
 
 	useEffect(() => {
 		if (playAgainRequests.length >= 2) {
-			socket.emit('playAgain', { roomId: id, round: round + 1 });
+			socket.emit('play_again', { roomId: id, round: round + 1 });
 		}
 	}, [playAgainRequests]);
 
-	socket.on('playAgain', (data) => {
+	socket.on('play_again', (data) => {
 		setTimeout(() => {
 			resetBoard(data);
 			setPlayAgainMessage('');
@@ -302,10 +302,10 @@ const Board: React.FC<BoardProps> = ({
 		navigate('/')
 	};
 
-	socket.on('leaved', (data) => {
+	socket.on('left', (data) => {
 		if (player?._id !== data._id) {
 			setDisablePlayAgainBtn(true);
-			setPlayAgainMessage(`${data.name} leaved the game`);
+			setPlayAgainMessage(`${data.name} left the game`);
 		}
 	});
 
