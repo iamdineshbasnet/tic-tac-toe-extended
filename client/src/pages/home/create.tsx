@@ -1,14 +1,14 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import React, { Dispatch, SetStateAction } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Form, Formik } from 'formik';
 import { useAppDispatch, useAppSelector } from '@/utils/hooks/appHooks';
 import { createGuest } from '../auth/redux/thunk';
 import { getPlayer } from '../profile/redux/thunk';
 import { socket } from '@/socket';
-import { joinRoom } from '../room/redux/thunk';
 import { authSelector } from '../auth/redux/selector';
+import { roomSelector } from '../room/redux/selector';
 
 interface CreateUserProps {
 	setModal: Dispatch<SetStateAction<boolean>>;
@@ -16,28 +16,31 @@ interface CreateUserProps {
 const CreateUser: React.FC<CreateUserProps> = ({ setModal }) => {
 	const dispatch = useAppDispatch();
 	const { loadingGuestRegistration } = useAppSelector(authSelector);
+	const { mode } = useAppSelector(roomSelector);
 	const initialState = {
 		name: '',
 	};
 
 	const navigate = useNavigate();
 	const { pathname } = useLocation();
-	const roomId = pathname.split('/waiting-room/')[1];
+	const { id } = useParams();
 	const handleSubmit = (values: { name: string }) => {
 		dispatch(createGuest(values))
 			.unwrap()
 			.then((res) => {
-				if (pathname.includes('/waiting-room/')) {
-					dispatch(joinRoom(roomId))
-						.unwrap()
-						.then((res) => {
-							if (res?.result?.roomId) {
-								socket.emit('join', res?.result?.roomId);
-								socket.on('join', res?.result?.roomId);
-							}
+				console.log(mode, 'mode')
+				if (mode === 'friends') {
+					if (pathname.includes('/waiting-room/')) {
+						socket.emit('join_room', {roomId:id, player: res.result});
+						socket.on('room_joined', (details)=>{
+							navigate(`/waiting-room/${details?.roomId}`);
 						});
-				} else {
-					res?.accessToken && navigate('/joining-room');
+						
+					} else {
+						res?.accessToken && navigate('/joining-room');
+					}
+				} else if (mode === 'multiplayer') {
+					navigate('/finding-room');
 				}
 				dispatch(getPlayer());
 				setModal(false);

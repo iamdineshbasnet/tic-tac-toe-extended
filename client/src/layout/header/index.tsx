@@ -7,11 +7,10 @@ import getCookie from '@/utils/cookies/getCookie';
 import { LogIn } from 'lucide-react';
 import { profileSelector } from '@/pages/profile/redux/selector';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const Header: React.FC = () => {
 	const dispatch = useAppDispatch();
-	const navigate = useNavigate()
 	const isAuthenticated = getCookie('accessToken');
 	const { player } = useAppSelector(profileSelector);
 	useEffect(() => {
@@ -19,7 +18,7 @@ const Header: React.FC = () => {
 	}, [isAuthenticated]);
 	return (
 		<header className="flex justify-between items-center border-b border-neutral-500 h-[60px] px-4">
-			<h3 className='font-semibold cursor-pointer' onClick={()=> navigate('/')}>TIC TAC TOE</h3>
+			<Link to={'/'} className='font-semibold cursor-pointer'>TIC TAC TOE</Link>
 
 			{/* <div className='flex items-center gap-4'>
         <Button className='font-semibold capitalize'>classic</Button>

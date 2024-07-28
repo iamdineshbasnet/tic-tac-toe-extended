@@ -3,7 +3,7 @@ import { deletePlayer, getPlayer, updatePlayer } from './thunk';
 import deleteCookie from '@/utils/cookies/deleteCookie';
 
 interface PlayerProps {
-	_id: string;
+	_id: string | null;
 	name: string;
 	username: string;
 	email: string;

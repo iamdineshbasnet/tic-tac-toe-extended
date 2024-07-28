@@ -47,7 +47,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 		const renderContent = () => {
 			if (loading) {
 				return (
-					<Loader />
+					<Loader variant={variant === "outline" ? "outline" : "solid"} />
 				);
 			} else {
 				return props.children || 'Button';

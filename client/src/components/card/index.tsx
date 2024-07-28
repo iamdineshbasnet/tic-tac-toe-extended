@@ -3,15 +3,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PlayerProps } from '@/pages/room/redux/types';
 
 interface UserCardProps {
-	data: PlayerProps
+	data: PlayerProps;
+	showMark?: boolean;
 }
-const UserCard: React.FC<UserCardProps> = ({ data }) => {
+const UserCard: React.FC<UserCardProps> = ({ data, showMark = true }) => {
 	const { name, mark, image } = data
 	return (
 		<Card className="relative w-full">
 			<CardContent className="p-4">
 				<h5 className="text-center font-semibold mt-5">
-					{name} <span className="capitalize">({mark})</span>
+					{name}{showMark && <span className="capitalize">({mark})</span>}
 				</h5>
 				<div className="absolute top-0 left-1/2 w-[60px] h-[60px] -translate-x-1/2 -translate-y-1/2 aspect-square border rounded-full overflow-hidden  ">
 					<img
@@ -21,7 +22,7 @@ const UserCard: React.FC<UserCardProps> = ({ data }) => {
 					/>
 				</div>
 			</CardContent>
-		</Card>
+		</Card>	
 	);
 };
 
