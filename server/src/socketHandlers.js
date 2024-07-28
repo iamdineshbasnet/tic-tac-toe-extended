@@ -64,9 +64,8 @@ module.exports = (io) => {
 
 		// Join room
 		socket.on('join_room', async (data) => {
-			const player = data.player._id;
+			const player = data.player?._id;
 			const roomId = data.roomId;
-
 			const room_details = await Room.findOne({ roomId });
 
 			if (room_details.participants.length >= 2) {
@@ -303,24 +302,29 @@ module.exports = (io) => {
 		// Find opponent
 		socket.on('find_opponent', async (playerId) => {
 			const player_details = await Player.findById(playerId);
-			const socketRoomId = Array.from(socket.rooms).join(',');
+
 			if (!player_details) {
 				socket.emit('error', 'Player not found');
 				return;
 			}
 
-			if (waitingPlayers.length === 0) {
-				waitingPlayers.push({ player: playerId, socketId: socket.id });
+			// Check if player is already in the waiting list
+			const existingPlayer = waitingPlayers.find((p) => p.player === playerId);
+			if (existingPlayer) {
+				// Update the socket ID if the player already exists
+				existingPlayer.socketId = socket.id;
 			} else {
-				waitingPlayers?.forEach((p) => {
-					if (p.playerId !== playerId) {
-						waitingPlayers.push({ player: playerId, socketId: socket.id });
-					}
-				});
+				// Add new player to the waiting list
+				waitingPlayers.push({ player: playerId, socketId: socket.id });
 			}
+
+			console.log(waitingPlayers, 'waiting players');
+
 			if (waitingPlayers.length >= 2) {
 				const [player1, player2] = waitingPlayers.splice(0, 2);
 				const roomId = generateRoomId();
+				const socketRoomId = Array.from(socket.rooms).join(',');
+
 
 				const newRoom = new Room({
 					roomId,
@@ -328,12 +332,12 @@ module.exports = (io) => {
 						{
 							player: player1.player,
 							mark: 'x',
-							player_socket_id: socket.id,
+							player_socket_id: player1.socketId,
 						},
 						{
 							player: player2.player,
 							mark: 'o',
-							player_socket_id: socket.id,
+							player_socket_id: player2.socketId,
 						},
 					],
 					board: Array(9).fill(''),
@@ -343,12 +347,12 @@ module.exports = (io) => {
 				});
 
 				await newRoom.save();
-				socket.join(socketRoomId);
 
 				let populated_room = await Room.findById(newRoom._id)
 					.populate('participants.player', 'username image isGuest name win')
 					.populate('creator', 'username image isGuest name win')
 					.lean();
+
 				populated_room.participants = populated_room.participants.map((participant) => ({
 					...participant.player,
 					mark: participant.mark,
@@ -356,14 +360,49 @@ module.exports = (io) => {
 					player_socket_id: participant.player_socket_id,
 				}));
 
-				io.to(player1.socketId).emit('opponent_found', {
-					message: 'success',
-					details: populated_room,
-				});
-				io.to(player2.socketId).emit('opponent_found', {
-					message: 'success',
-					details: populated_room,
-				});
+				// Emit the event to both players
+				io.to(player1.socketId).emit('opponent_found', { message: 'success', details: populated_room });
+				io.to(player2.socketId).emit('opponent_found', { message: 'success', details: populated_room });
+
+				// Add players to the room
+				socket.join(socketRoomId);
+				// io.sockets.connected[player1?.socketId].join(socketRoomId);
+				// io.sockets.connected[player2?.socketId].join(socketRoomId);
+			}
+		});
+
+		// Handle reconnection
+		socket.on('reconnect', async (playerId) => {
+			const player_details = await Player.findById(playerId);
+
+			if (!player_details) {
+				socket.emit('error', 'Player not found');
+				return;
+			}
+
+			const room = await Room.findOne({
+				'participants.player': playerId,
+			})
+				.populate('participants.player', 'username image isGuest name win')
+				.lean();
+
+			if (room) {
+				const socketRoomId = room.socket_room_id;
+				const populated_room = {
+					...room,
+					participants: room.participants.map((participant) => ({
+						...participant.player,
+						mark: participant.mark,
+						_id: participant._id,
+						player_socket_id: participant.player_socket_id,
+					})),
+				};
+
+				// Re-join the socket room
+				socket.join(socketRoomId);
+				io.to(socket.id).emit('opponent_found', { message: 'success', details: populated_room });
+			} else {
+				socket.emit('error', 'Room not found');
 			}
 		});
 	});

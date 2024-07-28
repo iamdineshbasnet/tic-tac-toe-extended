@@ -4,7 +4,7 @@ import { createRoom, getRoomDetails, joinRoom } from './thunk';
 
 const initialState: RoomProps = {
 	round: 1,
-	mode: '',
+	mode: 'friends',
 	roomCode: '',
 	loadingCreateRoom: false,
 	loadingJoinRoom: false,

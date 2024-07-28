@@ -7,13 +7,12 @@ import { Check, Copy } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { roomSelector } from '../redux/selector';
-import { getRoomDetails } from '../redux/thunk';
 import { profileSelector } from '@/pages/profile/redux/selector';
 import { socket } from '@/socket';
 import { setRoomDetails } from '../redux/roomSlice';
 import Modal from '@/components/modal';
 import CreateUser from '@/pages/home/create';
-
+import { PlayerProps } from '../redux/types';
 const WaitingRoom: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
@@ -21,42 +20,21 @@ const WaitingRoom: React.FC = () => {
 	const { player } = useAppSelector(profileSelector);
 	const [showModal, setShowModal] = useState<boolean>(false);
 	const [loadingStart, setLoadingStart] = useState<boolean>(false);
-	const [isHost, setIsHost] = useState<boolean>(false)
+	const [isHost, setIsHost] = useState<boolean>(false);
 	const [copied, setCopied] = useState({
 		id: false,
 		link: false,
 	});
-	const { id } = useParams()
-
-	useEffect(() => {
-		id && dispatch(getRoomDetails(id));
-	}, [id]);
+	const { id } = useParams();
 
 	const creator = roomDetails?.participants?.find((c) => c.username === player?.username);
 	const otherPlayer = roomDetails?.participants?.find((c) => c.username !== player?.username);
 
-	
 	useEffect(() => {
 		if (!roomDetails) return;
 
-		setIsHost(roomDetails?.creator?.username === player?.username)
-
+		setIsHost(roomDetails?.creator?.username === player?.username);
 	}, [roomDetails]);
-
-	useEffect(() => {
-		socket.on('join', (data) => {
-			dispatch(setRoomDetails(data));
-		});
-
-		// Clean up the socket listener on unmount
-		return () => {
-			socket.off('join');
-		};
-	}, []);
-	
-	socket.on('room_joined', (details)=>{
-		dispatch(setRoomDetails(details))
-	})
 
 	const startGame = () => {
 		const obj = {
@@ -106,6 +84,27 @@ const WaitingRoom: React.FC = () => {
 		username: 'placeholder',
 		isGuest: true,
 	};
+
+	useEffect(() => {
+		if (!player) return;
+		if (!id) return;
+		socket.emit('get_room_details', id);
+
+		socket.on('room_details', (data) => {
+			dispatch(setRoomDetails(data));
+			const filteredParticipants = data.participants.filter(
+				(p: PlayerProps) => p.username === player.username
+			);
+			if (filteredParticipants.length === 0) {
+				socket.emit('join_room', { roomId: id, player });
+			}
+		});
+	}, [id, player]);
+
+
+	socket.on('room_joined', (details) => {
+		dispatch(setRoomDetails(details));
+	});
 	return (
 		<main className="mt-12 max-w-[500px] mx-auto">
 			{player ? (

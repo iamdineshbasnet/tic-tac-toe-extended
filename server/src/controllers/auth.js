@@ -16,7 +16,6 @@ const createGuest = async(req, res) =>{
 
     const avatarUrls = await generateAvatar();
     const randomAvatarUrl = avatarUrls[Math.floor(Math.random() * avatarUrls.length)];
-    console.log(randomAvatarUrl, 'random avatar url')
     const guest = new player({ name, username, image: randomAvatarUrl })
 
     await guest.save()

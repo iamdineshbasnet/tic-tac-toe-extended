@@ -1,19 +1,15 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useAppDispatch, useAppSelector } from '@/utils/hooks/appHooks';
-import React, { useEffect, useState } from 'react';
-import { createRoom, joinRoom } from '../redux/thunk';
+import { useAppSelector } from '@/utils/hooks/appHooks';
+import React, {useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { socket } from '@/socket';
 import { roomSelector } from '../redux/selector';
-import { useToast } from '@/components/ui/use-toast';
 import { profileSelector } from '@/pages/profile/redux/selector';
 
 const JoiningRoom: React.FC = () => {
 	const { player } = useAppSelector(profileSelector)
-	const { toast } = useToast();
-	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
 	const [roomId, setRoomId] = useState<string>('');
 

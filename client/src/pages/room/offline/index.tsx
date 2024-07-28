@@ -1,6 +1,6 @@
 import UserCard from '@/components/card'
 import { getOrdinalSuffix } from '@/utils/functions/AppFunctions'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import OfflineBoard from '@/components/board/offlineBoard'
 import { useAppDispatch, useAppSelector } from '@/utils/hooks/appHooks'
 import { roomSelector } from '../redux/selector'

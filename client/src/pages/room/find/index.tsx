@@ -16,32 +16,31 @@ const FindingRoom: React.FC = () => {
 	const dispatch = useAppDispatch();
 
 	useEffect(() => {
-		player &&
-			socket.on('opponent_found', (data) => {
-				if (data.message === 'success') {
-					setOpponentFound(true);
-				} else {
-					setOpponentFound(false);
-				}
-				dispatch(setRoomDetails(data?.details));
-				dispatch(setRoomCode(data?.details?.roomId));
-				if (data) {
-					setTimeout(() => {
-						navigate(`/playground/${data?.details?.roomId}`);
-					}, 3000);
-				}
+		if (player) {
+			socket.emit('find_opponent', player?._id);
+
+			// Handle page refresh by re-emitting find_opponent
+			window.addEventListener('beforeunload', () => {
+				socket.emit('reconnect', player._id);
 			});
-
-		return () => {
-			socket.off('opponent_found');
-		};
-	}, [player]);
-
-	useEffect(() => {
-		player && socket.emit('find_opponent', player?._id);
+		}
 		dispatch(setRoomDetails(null));
 	}, [player]);
 
+	socket.on('opponent_found', (data) => {
+		if (data.message === 'success') {
+			setOpponentFound(true);
+		} else {
+			setOpponentFound(false);
+		}
+		dispatch(setRoomDetails(data?.details));
+		dispatch(setRoomCode(data?.details?.roomId));
+		if (data) {
+			setTimeout(() => {
+				navigate(`/playground/${data?.details?.roomId}`);
+			}, 2000);
+		}
+	});
 	const creator = roomDetails?.participants?.find((c) => c.username === player?.username);
 	const otherPlayer = roomDetails?.participants?.find((c) => c.username !== player?.username);
 
