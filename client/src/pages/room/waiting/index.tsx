@@ -14,6 +14,7 @@ import Modal from '@/components/modal';
 import CreateUser from '@/pages/home/create';
 import { PlayerProps } from '../redux/types';
 const WaitingRoom: React.FC = () => {
+	const domainName = window.location.hostname;
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
 	const { roomDetails } = useAppSelector(roomSelector);

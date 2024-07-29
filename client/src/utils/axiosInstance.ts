@@ -4,7 +4,7 @@ import deleteCookie from './cookies/deleteCookie';
 import setCookie from './cookies/setCookie';
 
 export const axiosInstance = axios.create({
-	baseURL: `${import.meta.env.REACT_APP_BASE_URL}`,
+	baseURL: `${import.meta.env.REACT_APP_BASE_URL}${import.meta.env.REACT_APP_VERSION}`,
 });
 
 axiosInstance.interceptors.request.use(
