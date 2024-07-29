@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useAppDispatch, useAppSelector } from '@/utils/hooks/appHooks';
 import { Check, Copy } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { roomSelector } from '../redux/selector';
 import { profileSelector } from '@/pages/profile/redux/selector';
 import { socket } from '@/socket';
@@ -14,6 +14,7 @@ import Modal from '@/components/modal';
 import CreateUser from '@/pages/home/create';
 import { PlayerProps } from '../redux/types';
 const WaitingRoom: React.FC = () => {
+	const domainName = window.location.host
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
 	const { roomDetails } = useAppSelector(roomSelector);
@@ -156,7 +157,7 @@ const WaitingRoom: React.FC = () => {
 									onClick={() =>
 										copyToClipboard(
 											'link',
-											`http://localhost:5173/waiting-room/${id}`
+											`${domainName}/waiting-room/${id}`
 										)
 									}>
 									<Copy
