@@ -58,10 +58,10 @@ const Offline: React.FC = () => {
     dispatch(setMode(type))
   }, [type])
   return (
-    <main className="mt-20 w-[900px] mx-auto">
+    <main className="mt-20 max-w-[900px] w-[100vw] px-4 mx-auto">
     <section className="flex justify-between gap-12">
       {players && <UserCard data={players[0]} />}
-      <div className="w-[80px] h-[80px] aspect-square border rounded-full flex items-center flex-col justify-center">
+      <div className="w-[80px] h-[80px] min-w-[80px] aspect-square border rounded-full flex items-center flex-col justify-center">
         <p className="text-center text-sm">
           {round}
           <sup>{getOrdinalSuffix(round)}</sup>

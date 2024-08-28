@@ -14,7 +14,7 @@ const UserCard: React.FC<UserCardProps> = ({ data, showMark = true }) => {
 				<h5 className="text-center font-semibold mt-5">
 					{name}{showMark && <span className="capitalize">({mark})</span>}
 				</h5>
-				<div className="absolute top-0 left-1/2 w-[60px] h-[60px] -translate-x-1/2 -translate-y-1/2 aspect-square border rounded-full overflow-hidden  ">
+				<div className="absolute top-0 left-1/2 max-w-[60px] w-full h-[60px] -translate-x-1/2 -translate-y-1/2 aspect-square border rounded-full overflow-hidden  ">
 					<img
 						src={image}
 						alt={name}

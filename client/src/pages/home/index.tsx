@@ -55,7 +55,7 @@ const Homepage: React.FC = () => {
 		showModal: showModal,
 	};
 	return (
-		<section className="text-center mt-12">
+		<section className="text-center mt-12 px-4">
 			<h5 className="capitalize mt-4 mb-4 font-semibold">
 				<div className="inline-flex w-3 h-3 rounded-full me-2 bg-green-500"></div>
 				online

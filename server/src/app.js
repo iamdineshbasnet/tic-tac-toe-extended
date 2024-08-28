@@ -31,10 +31,10 @@ const server = http.createServer(app);
 
 // Initialize Socket.io
 const io = socketIO(server, {
-  cors: {
-    origin: process.env.ALLOWED_HOST,
-    methods: ['GET', 'POST'],
-  },
+	cors: {
+		origin: process.env.ALLOWED_HOST,
+		methods: ['GET', 'POST'],
+	},
 });
 
 // Import routes
@@ -59,5 +59,5 @@ app.use(`${VERSION}/avatars`, express.static('./src/avatars'));
 
 // Start server
 server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+	console.log(`Server running at http://localhost:${PORT}`);
 });

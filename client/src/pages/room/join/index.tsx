@@ -70,7 +70,7 @@ const JoiningRoom: React.FC = () => {
 	};
 
 	return (
-		<main className="mt-12">
+		<main className="mt-12 px-4">
 			<Card className="max-w-[500px] mx-auto">
 				<CardHeader className="text-center font-semibold text-2xl">Enter Code</CardHeader>
 				<CardContent>

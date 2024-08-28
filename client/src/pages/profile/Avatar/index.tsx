@@ -35,11 +35,11 @@ const AvatarPage: React.FC = () => {
 		fetchAvatars();
 	}, []);
 	return (
-		<section className="text-center mt-12">
-			<div className="w-[500px] mx-auto text-left">
+		<section className="text-center mt-12 px-4">
+			<div className="max-w-[500px] mx-auto text-left">
 				<h3 className="font-semibold text-xl">Avatars</h3>
 				<h6 className="my-4">Bot</h6>
-				<section className="grid grid-cols-4 gap-4 max-h-[80vh] overflow-auto">
+				<section className="grid sm:grid-cols-4 grid-cols-3 gap-4 max-h-[80vh] overflow-auto">
 					{seedData.map((seed, index) => (
 						<div
 							key={index}

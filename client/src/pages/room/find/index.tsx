@@ -64,7 +64,7 @@ const FindingRoom: React.FC = () => {
 		isGuest: true,
 	};
 	return (
-		<main className="mt-12 text-center">
+		<main className="mt-12 text-center px-4">
 			{opponentFound ? (
 				<p className="mt-4">Opponent Found</p>
 			) : (

@@ -107,7 +107,7 @@ const WaitingRoom: React.FC = () => {
 		dispatch(setRoomDetails(details));
 	});
 	return (
-		<main className="mt-12 max-w-[500px] mx-auto">
+		<main className="mt-12 max-w-[500px] mx-auto px-4">
 			{player ? (
 				<>
 					<Card>

@@ -99,8 +99,8 @@ const MyAccount: React.FC = () => {
 		}
 	};
 	return (
-		<section className="text-center mt-12">
-			<div className="w-[500px] mx-auto text-left">
+		<section className="text-center mt-12 px-4">
+			<div className="max-w-[500px] mx-auto text-left">
 				<h3 className="font-semibold text-xl">My Account</h3>
 				<div className="grid items-center gap-1.5 mt-8">
 					<Label htmlFor="displayName" className={`mb-2`}>
@@ -125,7 +125,7 @@ const MyAccount: React.FC = () => {
 
 					<section className="mt-16">
 						<h3 className="font-semibold text-xl">Delete Account</h3>
-						<p className="text-gray-500 mt-2">
+						<p className="text-gray-500 mt-2 text-wrap">
 							Deleting an account permanently removes your account. This action cannot
 							be undone.
 						</p>
